@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Brand Colors */
+  --color-navy: 216 60% 10%;
+  --color-navy-light: 215 40% 18%;
+  --color-brand-orange: 22 82% 54%;
+  --color-brand-orange-dark: 22 82% 44%;
+  --color-brand-blue: 210 72% 45%;
+  --color-warm-white: 40 20% 98%;
+  --color-slate-bg: 220 14% 96%;
+
+  /* shadcn tokens */
+  --background: 40 20% 98%;
+  --foreground: 216 60% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 216 60% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 216 60% 10%;
+  --primary: 22 82% 54%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 72% 45%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 220 14% 96%;
+  --accent-foreground: 216 60% 10%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 22 82% 54%;
+  --radius: 0.625rem;
+
+  /* Semantic */
+  --semantic-success: 152 60% 40%;
+  --semantic-warning: 38 92% 50%;
+  --semantic-error: 0 84% 60%;
+  --semantic-info: 210 72% 45%;
+}
+
+.dark {
+  --background: 216 60% 7%;
+  --foreground: 40 20% 95%;
+  --card: 216 50% 12%;
+  --card-foreground: 40 20% 95%;
+  --popover: 216 50% 12%;
+  --popover-foreground: 40 20% 95%;
+  --primary: 22 82% 54%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 72% 45%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 215 40% 18%;
+  --muted-foreground: 215 16% 60%;
+  --accent: 215 40% 18%;
+  --accent-foreground: 40 20% 95%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 215 30% 22%;
+  --input: 215 30% 22%;
+  --ring: 22 82% 54%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--color-brand-orange)), hsl(var(--color-brand-blue)));
+  }
+
+  .glass-card {
+    @apply bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10;
+  }
+
+  .section-padding {
+    @apply py-20 lg:py-28;
+  }
+
+  .container-wide {
+    @apply mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--color-brand-orange));
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
