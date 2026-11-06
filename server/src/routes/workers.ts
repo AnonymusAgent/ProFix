@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { query } from '../db/pool.js';
 import { ApiError, ok } from '../utils/http.js';
+import { requireAdmin } from '../middleware/auth.js';
 
 /**
  * Worker (plumber / electrician) profiles + activity.
@@ -60,6 +61,21 @@ router.post('/profile', async (req, res, next) => {
       [body.neonUserId || null, body.email.toLowerCase(), body.name, body.phone || null, body.trade],
     );
     return ok(res, { worker: mapWorker(rows[0]) });
+  } catch (err) {
+    if (workerTableMissing(err)) {
+      return next(new ApiError(503, 'WORKER_TABLE_MISSING', 'Worker tables are not installed yet. Run server/db/worker-schema.sql in the Neon SQL Editor.'));
+    }
+    return next(err);
+  }
+});
+
+/** GET /api/workers — admin only: profiles for the Assign-to-worker picker */
+router.get('/', requireAdmin, async (_req, res, next) => {
+  try {
+    const { rows } = await query<WorkerRow>(
+      'SELECT * FROM worker_profiles ORDER BY trade ASC, name ASC',
+    );
+    return ok(res, { workers: rows.map(mapWorker) });
   } catch (err) {
     if (workerTableMissing(err)) {
       return next(new ApiError(503, 'WORKER_TABLE_MISSING', 'Worker tables are not installed yet. Run server/db/worker-schema.sql in the Neon SQL Editor.'));

@@ -106,6 +106,8 @@ export interface BookingRecord {
   description?: string | null;
   status: BookingStatus;
   assignedTo?: string | null;
+  workerEmail?: string | null;
+  payoutCents?: number | null;
   createdAt: string;
   /** true when saved locally because the API was unreachable */
   offline?: boolean;
