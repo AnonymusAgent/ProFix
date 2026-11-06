@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import {
   fetchAdminStats, fetchAdminBookings, updateBooking, fetchAdminMessages,
-  markMessageRead, fetchAdminUsers, updateUserRole, fetchHealth, ApiError,
+  markMessageRead, fetchAdminUsers, updateUserRole, fetchHealth, fetchAdminWorkers, ApiError,
+  type WorkerProfile,
 } from '@/lib/api';
 import type { AdminStats, AuthUser, BookingRecord, ContactMessageRecord } from '@/types';
 
@@ -24,6 +25,7 @@ export default function Admin() {
   const [dbStatus, setDbStatus] = useState<string>('…');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [workers, setWorkers] = useState<WorkerProfile[]>([]);
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
 
@@ -38,6 +40,8 @@ export default function Admin() {
           fetchAdminStats(), fetchAdminBookings(), fetchAdminMessages(), fetchAdminUsers(),
           fetchHealth().catch(() => ({ db: 'unreachable', status: 'error' })),
         ]);
+        // Workers power the Assign dropdown; never block the panel on them.
+        fetchAdminWorkers().then(setWorkers).catch(() => setWorkers([]));
         setStats(s);
         setBookings(b);
         setMessages(m);
@@ -63,6 +67,22 @@ export default function Admin() {
       toast({ title: 'Booking updated', description: `Status set to ${status.replace('_', ' ')}.` });
     } catch (err) {
       toast({ variant: 'destructive', title: 'Update failed', description: err instanceof ApiError ? err.message : undefined });
+    }
+  };
+
+  const handleAssignWorker = async (id: string, workerEmail: string) => {
+    try {
+      const updated = await updateBooking(id, { workerEmail });
+      setBookings((list) => list.map((b) => (b.id === id ? updated : b)));
+      const worker = workers.find((w) => w.email === workerEmail);
+      toast({
+        title: workerEmail ? 'Worker assigned' : 'Worker unassigned',
+        description: workerEmail
+          ? `${worker?.name || workerEmail} will see this job in their dashboard.`
+          : 'This booking is back in the unassigned pool.',
+      });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Assignment failed', description: err instanceof ApiError ? err.message : undefined });
     }
   };
 
@@ -176,6 +196,7 @@ export default function Admin() {
                         <th className="px-4 py-3 font-medium">When</th>
                         <th className="px-4 py-3 font-medium">Urgency</th>
                         <th className="px-4 py-3 font-medium">Status</th>
+                        <th className="px-4 py-3 font-medium">Assigned to</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -200,10 +221,25 @@ export default function Admin() {
                               ))}
                             </select>
                           </td>
+                          <td className="px-4 py-3">
+                            <select
+                              value={b.workerEmail || ''}
+                              onChange={(e) => handleAssignWorker(b.id, e.target.value)}
+                              className={selectClass}
+                              aria-label={`Assign worker for booking by ${b.name}`}
+                            >
+                              <option value="">Unassigned</option>
+                              {workers.map((w) => (
+                                <option key={w.email} value={w.email}>
+                                  {w.name} ({w.trade === 'plumber' ? 'Plumber' : 'Electrician'})
+                                </option>
+                              ))}
+                            </select>
+                          </td>
                         </tr>
                       ))}
                       {bookings.length === 0 && (
-                        <tr><td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">No bookings match.</td></tr>
+                        <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">No bookings match.</td></tr>
                       )}
                     </tbody>
                   </table>

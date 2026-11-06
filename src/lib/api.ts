@@ -285,7 +285,7 @@ export async function fetchAdminBookings(params?: { status?: string; q?: string 
   return bookings;
 }
 
-export async function updateBooking(id: string, input: { status?: string; assignedTo?: string; adminNotes?: string }) {
+export async function updateBooking(id: string, input: { status?: string; assignedTo?: string; adminNotes?: string; workerEmail?: string }) {
   const { booking } = await request<{ booking: BookingRecord }>(`/bookings/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(input),
@@ -339,6 +339,11 @@ export interface WorkerStats {
     monthly: { month: string; earnedCents: number; jobs: number }[];
     recentJobs: { id: string; service: string; status: string; date: string; earnedCents: number | null }[];
   };
+}
+
+export async function fetchAdminWorkers(): Promise<WorkerProfile[]> {
+  const { workers } = await request<{ workers: WorkerProfile[] }>('/workers');
+  return workers;
 }
 
 export async function apiSaveWorkerProfile(input: {

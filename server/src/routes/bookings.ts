@@ -29,7 +29,7 @@ interface BookingRow {
   name: string; email: string | null; phone: string; address: string | null;
   service_type: string; preferred_date: string | null; preferred_time: string | null;
   urgency: string; description: string | null; status: string;
-  assigned_to: string | null; admin_notes: string | null;
+  assigned_to: string | null; admin_notes: string | null; worker_email: string | null; payout_cents: number | null;
   created_at: string; updated_at: string;
 }
 
@@ -39,7 +39,7 @@ function mapBooking(r: BookingRow) {
     name: r.name, email: r.email, phone: r.phone, address: r.address,
     serviceType: r.service_type, date: r.preferred_date, time: r.preferred_time,
     urgency: r.urgency, description: r.description, status: r.status,
-    assignedTo: r.assigned_to, adminNotes: r.admin_notes,
+    assignedTo: r.assigned_to, adminNotes: r.admin_notes, workerEmail: r.worker_email, payoutCents: r.payout_cents,
     createdAt: r.created_at, updatedAt: r.updated_at,
   };
 }
@@ -119,19 +119,35 @@ const adminUpdateSchema = z.object({
   status: z.enum(STATUSES).optional(),
   assignedTo: z.string().trim().max(120).optional().or(z.literal('')),
   adminNotes: z.string().trim().max(2000).optional().or(z.literal('')),
+  // Worker assignment from the admin "Assign to worker" dropdown.
+  // '' unassigns; omitted leaves the assignment unchanged.
+  workerEmail: z.string().trim().email().max(254).optional().or(z.literal('')),
 });
 
 /** PATCH /api/bookings/:id — admin: status / assignment / notes */
 router.patch('/:id', requireAdmin, async (req, res, next) => {
   try {
     const b = adminUpdateSchema.parse(req.body);
+    const sets: string[] = [];
+    const params: unknown[] = [];
+    if (b.status !== undefined) { params.push(b.status); sets.push(`status = $${params.length}`); }
+    if (b.assignedTo !== undefined) { params.push(b.assignedTo || null); sets.push(`assigned_to = $${params.length}`); }
+    if (b.adminNotes !== undefined) { params.push(b.adminNotes || null); sets.push(`admin_notes = $${params.length}`); }
+    if (b.workerEmail !== undefined) {
+      params.push(b.workerEmail ? b.workerEmail.toLowerCase() : null);
+      sets.push(`worker_email = $${params.length}`);
+      // Snapshot the payout (70% of the service price) at assignment time so
+      // later price changes never rewrite a worker's earnings history.
+      params.push(0.7);
+      sets.push(`payout_cents = CASE WHEN $${params.length - 1} IS NULL THEN NULL
+                                    ELSE (SELECT ROUND(price_cents * $${params.length})
+                                            FROM services WHERE id = bookings.service_id) END`);
+    }
+    if (!sets.length) throw new ApiError(422, 'VALIDATION_ERROR', 'Nothing to update.');
+    params.push(req.params.id);
     const { rows } = await query<BookingRow>(
-      `UPDATE bookings SET
-         status = COALESCE($1, status),
-         assigned_to = COALESCE($2, assigned_to),
-         admin_notes = COALESCE($3, admin_notes)
-       WHERE id = $4 RETURNING *`,
-      [b.status ?? null, b.assignedTo || null, b.adminNotes || null, req.params.id],
+      `UPDATE bookings SET ${sets.join(', ')} WHERE id = $${params.length} RETURNING *`,
+      params,
     );
     if (!rows[0]) throw notFound('Booking');
     return ok(res, { booking: mapBooking(rows[0]) });
