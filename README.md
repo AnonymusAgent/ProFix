@@ -223,13 +223,19 @@ Database: run `server/db/worker-schema.sql` once in the Neon SQL Editor
 > owns the Auth URL used by `VITE_NEON_AUTH_URL`:
 >
 > 1. Neon Console -> **Auth -> Configuration -> Domains**.
-> 2. Add `https://profix-web-lovat.vercel.app` — protocol included, and
->    **no trailing slash** (`https://...app/` never matches; delete and
->    re-add the entry if it has one).
+> 2. Add `https://pro-fix-web.vercel.app` (the current site domain; the old
+>    `profix-web-lovat.vercel.app` redirects to it, so browsers always end
+>    up on the new origin) — protocol included, and **no trailing slash**
+>    (`https://...app/` never matches; delete and re-add the entry if it
+>    has one).
 > 3. Add any other address the site is opened from (for example
 >    `https://profix-web-anonymusagents-projects.vercel.app`); per-deploy
 >    preview URLs change every deploy, so test registration from the
 >    production domain. Localhost origins are trusted by default.
+>
+> The same production origin must also be present in the backend's
+> `CLIENT_URL` env var (Vercel -> profix-backend), or the API will reject
+> the site's calls with a CORS error.
 >
 > Until the exact origin is listed, Neon returns `403 Invalid origin` for
 > customer and worker registration and login. The app's error toast shows

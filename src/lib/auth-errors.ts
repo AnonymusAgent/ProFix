@@ -3,8 +3,8 @@
  *
  * Neon Auth (Better Auth) checks the browser `Origin` header against its
  * trusted-domain allowlist with an EXACT string match. The browser sends
- * e.g. `https://profix-web-lovat.vercel.app` (no trailing slash, no path),
- * so an allowlist entry typed as `https://profix-web-lovat.vercel.app/`
+ * e.g. `https://pro-fix-web.vercel.app` (no trailing slash, no path),
+ * so an allowlist entry typed as `https://pro-fix-web.vercel.app/`
  * never matches and every sign-up/sign-in fails with `403 Invalid origin`.
  * The allowlist is also per Neon branch: the domain must be added on the
  * branch that owns the Auth URL this site was built with.
