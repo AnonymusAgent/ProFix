@@ -222,3 +222,12 @@ Database: run `server/db/worker-schema.sql` once in the Neon SQL Editor
 > Until the exact origin is listed, Neon returns `403 Invalid origin` for
 > customer and worker registration and login. The app's error toast shows
 > the precise origin string to copy in this case.
+>
+> Registration "Email and password signups are not enabled": the origin
+> check passed, but sign-up is switched off in Neon. On the same branch:
+> Neon Console -> **Auth -> Email & Password** (Settings -> Better Auth):
+> turn ON email/password sign-up ("Sign-up with Email") and make sure
+> **Disable sign up** is OFF (`neon neon-auth config email-password update
+> --enabled` via CLI). Leave "Require email verification" OFF unless an
+> email sender is configured, or new users will be stuck unverified. The
+> app's error toast explains this in plain English as well.
