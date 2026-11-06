@@ -17,7 +17,10 @@ export function getPool(): pg.Pool {
     (err as Error & { code?: string }).code = 'DB_NOT_CONFIGURED';
     throw err;
   }
-  const url = config.databaseUrl;
+  // node-postgres cannot do SCRAM channel binding; Neon appends
+  // `channel_binding=require` to dashboard strings, which makes the
+  // handshake fail — strip it (encryption still enforced via sslmode).
+  const url = config.databaseUrl.replace(/([?&])channel_binding=[^&]*&?/g, '$1').replace(/[?&]$/, '');
   const needsSsl = /neon\.tech|sslmode=require/.test(url);
   pool = new Pool({
     connectionString: url,
