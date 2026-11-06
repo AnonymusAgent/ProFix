@@ -74,8 +74,28 @@ npm run dev                          # frontend on :8080
 5. Start the API with `npm run server:start` (after `npm run server:build`) and point
    `VITE_API_URL` at it in production, or keep the `/api` proxy.
 
-_Alternative:_ paste `server/db/schema.sql` then `server/db/seed.sql` into the Neon SQL Editor,
-then run `npm run db:seed` once so the admin password gets hashed and stored.
+#### Option B — Neon SQL Editor (no local tools needed)
+
+In the Neon console → **SQL Editor**, run these files **in order** (open each
+link, copy all, paste, Run):
+
+1. [`server/db/schema.sql`](https://raw.githubusercontent.com/AnonymusAgent/ProFix/main/server/db/schema.sql) — creates all tables
+2. [`server/db/seed.sql`](https://raw.githubusercontent.com/AnonymusAgent/ProFix/main/server/db/seed.sql) — 14 services, 14 FAQs, 4 pricing plans, 8 testimonials
+3. [`server/db/admin-user.sql`](https://raw.githubusercontent.com/AnonymusAgent/ProFix/main/server/db/admin-user.sql) — creates the admin login (`admin@profixservices.com` / `Admin@12345`)
+
+All three are idempotent, so re-running them is safe. Verify with:
+
+```sql
+SELECT (SELECT COUNT(*) FROM services) AS services,       -- expect 14
+       (SELECT COUNT(*) FROM faqs) AS faqs,               -- expect 14
+       (SELECT COUNT(*) FROM pricing_plans) AS plans,     -- expect 4
+       (SELECT COUNT(*) FROM testimonials) AS testimonials, -- expect 8
+       (SELECT COUNT(*) FROM users) AS users;             -- expect >= 1
+```
+
+> Auth note: the app uses its own JWT auth (register/login/admin roles).
+> The `NEON_AUTH_BASE_URL` from Neon Auth is not required; it can be
+> integrated later without changing this schema.
 
 ## Demo accounts (after seeding)
 

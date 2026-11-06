@@ -14,7 +14,8 @@
     "test:smoke": "tsx src/db/smoke-test.ts",
     "dev:memory": "tsx scripts/preview-server.ts",
     "test:e2e": "tsx scripts/e2e-test.ts",
-    "db:generate-seed": "tsx scripts/generate-seed.ts"
+    "db:generate-seed": "tsx scripts/generate-seed.ts",
+    "db:verify": "tsx scripts/verify-db.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
