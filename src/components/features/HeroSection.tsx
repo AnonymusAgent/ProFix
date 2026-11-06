@@ -11,8 +11,8 @@ export default function HeroSection() {
       {/* Background */}
       <div className="absolute inset-0">
         <img src={heroBg} alt="" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-navy/95 via-navy/85 to-navy/50" />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy/60 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-navy/95 via-navy/90 to-navy/70" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy/70 via-navy/20 to-transparent" />
       </div>
 
       {/* Geometric accents */}
@@ -59,7 +59,7 @@ export default function HeroSection() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35 }}
-              className="mt-6 text-lg lg:text-xl text-white/70 max-w-xl text-pretty leading-relaxed"
+              className="mt-6 text-lg lg:text-xl text-white/80 max-w-xl text-pretty leading-relaxed"
             >
               Licensed professionals delivering reliable plumbing and electrical services for homes and businesses. Fast response, fair pricing, guaranteed satisfaction.
             </motion.p>
@@ -77,7 +77,7 @@ export default function HeroSection() {
                   <ArrowRight className="ml-2 size-5" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="h-[52px] px-8 border-white/25 text-white hover:bg-white/10 font-display font-semibold text-base backdrop-blur-sm">
+              <Button asChild size="lg" className="h-[52px] px-8 bg-white text-navy hover:bg-white/90 dark:bg-white/10 dark:text-white dark:hover:bg-white/20 border border-navy/15 dark:border-white/40 shadow-lg shadow-navy/20 font-display font-semibold text-base backdrop-blur-sm">
                 <a href={`tel:${SITE_CONFIG.emergencyPhone}`}>
                   <Phone className="mr-2 size-5" />
                   Emergency Call
@@ -113,14 +113,14 @@ export default function HeroSection() {
             className="hidden lg:block lg:col-span-5"
           >
             <div className="relative">
-              <div className="glass-card rounded-2xl p-8 border-white/10 bg-white/5">
+              <div className="rounded-2xl p-8 bg-navy/95 backdrop-blur-xl border border-white/15 shadow-2xl shadow-navy/50">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="size-12 rounded-xl bg-brand-orange/20 flex items-center justify-center">
                     <Zap className="size-6 text-brand-orange" />
                   </div>
                   <div>
                     <h3 className="font-display font-bold text-white text-lg">Quick Service Request</h3>
-                    <p className="text-sm text-white/50">Get help within minutes</p>
+                    <p className="text-sm text-white/70">Get help within minutes</p>
                   </div>
                 </div>
                 <div className="space-y-4">
@@ -132,16 +132,16 @@ export default function HeroSection() {
                     <Link
                       key={item.label}
                       to="/contact"
-                      className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-brand-orange/30 transition-all group"
+                      className="flex items-center justify-between p-4 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 hover:border-brand-orange/40 transition-all group"
                     >
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">{item.emoji}</span>
                         <div>
                           <p className="font-medium text-white text-sm">{item.label}</p>
-                          <p className="text-xs text-white/40">{item.time}</p>
+                          <p className="text-xs text-white/60">{item.time}</p>
                         </div>
                       </div>
-                      <ArrowRight className="size-4 text-white/30 group-hover:text-brand-orange group-hover:translate-x-1 transition-all" />
+                      <ArrowRight className="size-4 text-white/50 group-hover:text-brand-orange group-hover:translate-x-1 transition-all" />
                     </Link>
                   ))}
                 </div>
