@@ -18,6 +18,9 @@ const Booking = lazy(() => import('@/pages/Booking'));
 const Testimonials = lazy(() => import('@/pages/Testimonials'));
 const Login = lazy(() => import('@/pages/Login'));
 const AdminLogin = lazy(() => import('@/pages/AdminLogin'));
+const WorkerRegister = lazy(() => import('@/pages/worker/WorkerRegister'));
+const WorkerLogin = lazy(() => import('@/pages/worker/WorkerLogin'));
+const WorkerDashboard = lazy(() => import('@/pages/worker/WorkerDashboard'));
 const Register = lazy(() => import('@/pages/Register'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Admin = lazy(() => import('@/pages/Admin'));
@@ -57,6 +60,16 @@ export default function App() {
               <Route path="/testimonials" element={<Testimonials />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/worker/register" element={<WorkerRegister />} />
+              <Route path="/worker/login" element={<WorkerLogin />} />
+              <Route
+                path="/worker/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <WorkerDashboard />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/dashboard"
                 element={

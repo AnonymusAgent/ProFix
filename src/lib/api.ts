@@ -314,3 +314,47 @@ export async function updateUserRole(id: string, role: AuthUser['role']): Promis
 export async function fetchHealth(): Promise<{ db: string; status: string }> {
   return request('/health');
 }
+
+/* ---------- workers (Neon Auth identities, ProFix-side profiles) ---------- */
+
+export interface WorkerProfile {
+  id: string;
+  neonUserId?: string | null;
+  email: string;
+  name: string;
+  phone?: string | null;
+  trade: 'plumber' | 'electrician';
+  createdAt?: string;
+}
+
+export interface WorkerStats {
+  worker: WorkerProfile;
+  stats: {
+    payoutRate: number;
+    earnedThisMonthCents: number;
+    earnedThisYearCents: number;
+    completedJobs: number;
+    upcomingJobs: number;
+    tradeCompletedThisMonth: number;
+    monthly: { month: string; earnedCents: number; jobs: number }[];
+    recentJobs: { id: string; service: string; status: string; date: string; earnedCents: number | null }[];
+  };
+}
+
+export async function apiSaveWorkerProfile(input: {
+  email: string;
+  name: string;
+  phone?: string;
+  trade: 'plumber' | 'electrician';
+  neonUserId?: string;
+}): Promise<WorkerProfile> {
+  const { worker } = await request<{ worker: WorkerProfile }>('/workers/profile', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return worker;
+}
+
+export async function apiWorkerMe(email: string): Promise<WorkerStats> {
+  return request<WorkerStats>(`/workers/me?email=${encodeURIComponent(email)}`);
+}

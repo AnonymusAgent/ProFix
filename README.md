@@ -186,3 +186,27 @@ Two git-linked Vercel projects deploy from `main`:
 
 Verify a deployment: `GET <api-url>/api/health` → `"db":"connected"`, and
 `<api-url>/api/services` returns the 14 seeded services.
+
+## Workers (plumbers & electricians)
+
+Workers sign up and log in with **Neon Auth** (same cookie sessions as
+customers — never the API JWT):
+
+- Sign-up: `/worker/register` — pick the **Plumbers** or **Electricians**
+  section, create the Neon Auth account, and a worker profile is saved via
+  `POST /api/workers/profile`.
+- Login: `/worker/login` — Neon Auth sign-in, then the worker profile loads
+  (or is completed by picking a trade).
+- Dashboard: `/worker/dashboard` — earned this month/year, completed and
+  upcoming assigned jobs, a 6-month earnings chart, and recent jobs.
+  Workers keep **70%** of completed job value; the office assigns bookings
+  by setting `bookings.worker_email` to the worker's account email.
+
+Database: run `server/db/worker-schema.sql` once in the Neon SQL Editor
+(it is also included in `server/db/schema.sql` for fresh installs).
+
+> Registration "Invalid origin": Neon Auth only accepts sign-ups from
+> trusted domains. Add every site origin (for example
+> `https://profix-web-lovat.vercel.app`) under **Neon Console -> Auth ->
+> Domains / trusted domains**. Until the domain is added, Neon returns
+> `403 Invalid origin` for both customer and worker registration.
