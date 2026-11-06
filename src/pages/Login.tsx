@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api';
+import { friendlyAuthError } from '@/lib/auth-errors';
 
 export default function Login() {
   const [email, setEmail] = useState('');

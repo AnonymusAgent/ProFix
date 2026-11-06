@@ -9,15 +9,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api';
-
-
-function friendlyAuthError(err: unknown): string {
-  const raw = err instanceof Error ? err.message : 'Please try again.';
-  if (/invalid origin/i.test(raw)) {
-    return 'Registration is not enabled for this website address yet. The site owner must add this domain in Neon Console -> Auth -> Domains (trusted domains), then registration will work.';
-  }
-  return raw;
-}
+import { friendlyAuthError } from '@/lib/auth-errors';
 
 export default function Register() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirm: '' });

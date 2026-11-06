@@ -205,8 +205,20 @@ customers — never the API JWT):
 Database: run `server/db/worker-schema.sql` once in the Neon SQL Editor
 (it is also included in `server/db/schema.sql` for fresh installs).
 
-> Registration "Invalid origin": Neon Auth only accepts sign-ups from
-> trusted domains. Add every site origin (for example
-> `https://profix-web-lovat.vercel.app`) under **Neon Console -> Auth ->
-> Domains / trusted domains**. Until the domain is added, Neon returns
-> `403 Invalid origin` for both customer and worker registration.
+> Registration "Invalid origin": Neon Auth only accepts sign-ups/logins
+> from trusted domains, matched as an EXACT string against the browser's
+> `Origin` header. The allowlist is per Neon branch, so on the branch that
+> owns the Auth URL used by `VITE_NEON_AUTH_URL`:
+>
+> 1. Neon Console -> **Auth -> Configuration -> Domains**.
+> 2. Add `https://profix-web-lovat.vercel.app` — protocol included, and
+>    **no trailing slash** (`https://...app/` never matches; delete and
+>    re-add the entry if it has one).
+> 3. Add any other address the site is opened from (for example
+>    `https://profix-web-anonymusagents-projects.vercel.app`); per-deploy
+>    preview URLs change every deploy, so test registration from the
+>    production domain. Localhost origins are trusted by default.
+>
+> Until the exact origin is listed, Neon returns `403 Invalid origin` for
+> customer and worker registration and login. The app's error toast shows
+> the precise origin string to copy in this case.

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { apiSaveWorkerProfile } from '@/lib/api';
+import { friendlyAuthError } from '@/lib/auth-errors';
 import Logo from '@/components/brand/Logo';
 import TradePicker, { type Trade } from '@/components/worker/TradePicker';
 
@@ -64,7 +65,7 @@ export default function WorkerRegister() {
       toast({
         variant: 'destructive',
         title: 'Worker registration failed',
-        description: err instanceof Error ? err.message : 'Please try again.',
+        description: friendlyAuthError(err),
       });
     } finally {
       setSubmitting(false);
