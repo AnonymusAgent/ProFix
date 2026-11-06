@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
@@ -7,15 +7,27 @@ import FAQAccordion from '@/components/features/FAQAccordion';
 import PricingCards from '@/components/features/PricingCards';
 import EmergencyBanner from '@/components/features/EmergencyBanner';
 import { FAQ_DATA } from '@/constants/mockData';
+import { fetchFaqs } from '@/lib/api';
+import type { FAQItem } from '@/types';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
-
-const categories = ['All', 'General', 'Pricing', 'Emergency', 'Electrical'] as const;
 
 export default function FAQ() {
   const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [faqs, setFaqs] = useState<FAQItem[]>(FAQ_DATA);
   const { ref, isVisible } = useScrollAnimation();
 
-  const filtered = activeCategory === 'All' ? FAQ_DATA : FAQ_DATA.filter((f) => f.category === activeCategory);
+  useEffect(() => {
+    let cancelled = false;
+    fetchFaqs().then((data) => { if (!cancelled && data.length) setFaqs(data); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const categories = useMemo(
+    () => ['All', ...Array.from(new Set(faqs.map((f) => f.category)))],
+    [faqs],
+  );
+
+  const filtered = activeCategory === 'All' ? faqs : faqs.filter((f) => f.category === activeCategory);
 
   return (
     <>

@@ -14,13 +14,22 @@ const ThemeContext = createContext<ThemeContextValue>({
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
-    const saved = localStorage.getItem('profix-theme');
-    return (saved as Theme) || 'light';
+    try {
+      const saved = localStorage.getItem('profix-theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+    } catch {
+      /* storage unavailable (private mode) — fall through */
+    }
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('profix-theme', theme);
+    try {
+      localStorage.setItem('profix-theme', theme);
+    } catch {
+      /* ignore — theme simply won't persist */
+    }
   }, [theme]);
 
   const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));

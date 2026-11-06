@@ -1,17 +1,26 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import ServiceCard from '@/components/features/ServiceCard';
 import EmergencyBanner from '@/components/features/EmergencyBanner';
 import { SERVICES } from '@/constants/mockData';
+import { fetchServices } from '@/lib/api';
+import type { Service } from '@/types';
 import servicesHero from '@/assets/services-hero.jpg';
 
 export default function Services() {
   const [activeTab, setActiveTab] = useState<'all' | 'plumbing' | 'electrical'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [services, setServices] = useState<Service[]>(SERVICES);
 
-  const filtered = SERVICES.filter((s) => {
+  useEffect(() => {
+    let cancelled = false;
+    fetchServices().then((data) => { if (!cancelled && data.length) setServices(data); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const filtered = services.filter((s) => {
     const matchTab = activeTab === 'all' || s.category === activeTab;
     const matchSearch =
       !searchQuery ||
@@ -46,9 +55,9 @@ export default function Services() {
         <div className="container-wide py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-1 p-1 bg-muted rounded-xl">
             {([
-              { key: 'all', label: 'All Services', count: SERVICES.length },
-              { key: 'plumbing', label: '🔧 Plumbing', count: SERVICES.filter((s) => s.category === 'plumbing').length },
-              { key: 'electrical', label: '⚡ Electrical', count: SERVICES.filter((s) => s.category === 'electrical').length },
+              { key: 'all', label: 'All Services', count: services.length },
+              { key: 'plumbing', label: '🔧 Plumbing', count: services.filter((s) => s.category === 'plumbing').length },
+              { key: 'electrical', label: '⚡ Electrical', count: services.filter((s) => s.category === 'electrical').length },
             ] as const).map((tab) => (
               <button
                 key={tab.key}

@@ -32,14 +32,14 @@ export default function EmergencyBanner() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button asChild size="lg" className="h-13 px-8 bg-white text-red-600 hover:bg-white/90 font-display font-bold shadow-xl">
+            <Button asChild size="lg" className="h-[52px] px-8 bg-white text-red-600 hover:bg-white/90 font-display font-bold shadow-xl">
               <a href={`tel:${SITE_CONFIG.emergencyPhone}`}>
                 <Phone className="size-5 mr-2" />
                 {SITE_CONFIG.emergencyPhone}
               </a>
             </Button>
-            <Button asChild size="lg" variant="outline" className="h-13 px-6 border-white/30 text-white hover:bg-white/10 font-display font-semibold">
-              <Link to="/contact">Book Online</Link>
+            <Button asChild size="lg" variant="outline" className="h-[52px] px-6 border-white/30 text-white hover:bg-white/10 font-display font-semibold">
+              <Link to="/booking">Book Online</Link>
             </Button>
           </div>
         </div>

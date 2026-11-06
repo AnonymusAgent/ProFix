@@ -71,13 +71,13 @@ export default function HeroSection() {
               transition={{ delay: 0.5 }}
               className="mt-8 flex flex-wrap gap-4"
             >
-              <Button asChild size="lg" className="h-13 px-8 bg-brand-orange hover:bg-brand-orange-dark text-white font-display font-semibold text-base shadow-xl shadow-brand-orange/30">
-                <Link to="/contact">
+              <Button asChild size="lg" className="h-[52px] px-8 bg-brand-orange hover:bg-brand-orange-dark text-white font-display font-semibold text-base shadow-xl shadow-brand-orange/30">
+                <Link to="/booking">
                   Book a Service
                   <ArrowRight className="ml-2 size-5" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="h-13 px-8 border-white/25 text-white hover:bg-white/10 font-display font-semibold text-base backdrop-blur-sm">
+              <Button asChild variant="outline" size="lg" className="h-[52px] px-8 border-white/25 text-white hover:bg-white/10 font-display font-semibold text-base backdrop-blur-sm">
                 <a href={`tel:${SITE_CONFIG.emergencyPhone}`}>
                   <Phone className="mr-2 size-5" />
                   Emergency Call

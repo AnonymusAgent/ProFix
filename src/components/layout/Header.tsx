@@ -1,16 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Phone, Sun, Moon, Zap, Droplets } from 'lucide-react';
+import { Menu, X, Phone, Sun, Moon, Zap, Droplets, LayoutDashboard, LogOut, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SITE_CONFIG, NAV_LINKS } from '@/constants/config';
 import { useTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const { user, isAdmin, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleScroll = useCallback(() => {
     setIsScrolled(window.scrollY > 20);
@@ -24,6 +27,11 @@ export default function Header() {
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <>
@@ -49,14 +57,13 @@ export default function Header() {
 
       {/* Main header */}
       <header
-        className={`sticky top-0 z-header w-full transition-all duration-300 ${
+        className={`sticky top-0 z-50 w-full transition-all duration-300 ${
           isScrolled
             ? 'bg-background/95 backdrop-blur-xl shadow-lg shadow-black/5 dark:shadow-black/20'
             : 'bg-background/80 backdrop-blur-md'
         }`}
       >
-        <div className="container-wide flex items-center justify-between h-16 lg:h-18">
-          {/* Logo */}
+        <div className="container-wide flex items-center justify-between h-16 lg:h-[72px]">
           <Link to="/" className="flex items-center gap-2.5 group">
             <div className="relative flex items-center justify-center size-10 rounded-lg bg-gradient-to-br from-brand-orange to-brand-orange-dark shadow-lg shadow-brand-orange/25">
               <Droplets className="size-5 text-white" />
@@ -73,25 +80,22 @@ export default function Header() {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1" aria-label="Primary">
             {NAV_LINKS.map((link) => {
-              const isActive = location.pathname === link.path;
+              const isActive =
+                location.pathname === link.path ||
+                (link.path === '/services' && location.pathname.startsWith('/services/'));
               return (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                    isActive
-                      ? 'text-brand-orange'
-                      : 'text-foreground/70 hover:text-foreground hover:bg-accent'
+                  className={`relative px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    isActive ? 'text-brand-orange' : 'text-foreground/70 hover:text-foreground hover:bg-accent'
                   }`}
                 >
                   {link.label}
                   {isActive && (
-                    <motion.div
-                      layoutId="nav-indicator"
-                      className="absolute bottom-0 left-2 right-2 h-0.5 bg-brand-orange rounded-full"
-                    />
+                    <motion.div layoutId="nav-indicator" className="absolute bottom-0 left-2 right-2 h-0.5 bg-brand-orange rounded-full" />
                   )}
                 </Link>
               );
@@ -99,16 +103,46 @@ export default function Header() {
           </nav>
 
           {/* Desktop actions */}
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-2">
             <button
               onClick={toggleTheme}
               className="size-10 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
               aria-label="Toggle theme"
             >
-              {theme === 'light' ? <Moon className="size-4.5" /> : <Sun className="size-4.5" />}
+              {theme === 'light' ? <Moon className="size-[18px]" /> : <Sun className="size-[18px]" />}
             </button>
-            <Button asChild size="default" className="bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold shadow-lg shadow-brand-orange/25">
-              <Link to="/contact">
+            {user ? (
+              <>
+                <Button asChild variant="ghost" size="default" className="font-semibold">
+                  <Link to="/dashboard">
+                    <LayoutDashboard className="size-4 mr-2" />
+                    {user.name.split(' ')[0]}
+                  </Link>
+                </Button>
+                {isAdmin && (
+                  <Button asChild variant="ghost" size="default" className="font-semibold text-brand-orange">
+                    <Link to="/admin">
+                      <ShieldCheck className="size-4 mr-2" />
+                      Admin
+                    </Link>
+                  </Button>
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="size-10 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                  aria-label="Log out"
+                  title="Log out"
+                >
+                  <LogOut className="size-[18px]" />
+                </button>
+              </>
+            ) : (
+              <Button asChild variant="ghost" size="default" className="font-semibold">
+                <Link to="/login">Log In</Link>
+              </Button>
+            )}
+            <Button asChild size="default" className="bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold shadow-lg shadow-brand-orange/25 ml-1">
+              <Link to="/booking">
                 <Phone className="size-4 mr-2" />
                 Book Now
               </Link>
@@ -122,12 +156,13 @@ export default function Header() {
               className="size-10 flex items-center justify-center rounded-lg text-muted-foreground"
               aria-label="Toggle theme"
             >
-              {theme === 'light' ? <Moon className="size-4.5" /> : <Sun className="size-4.5" />}
+              {theme === 'light' ? <Moon className="size-[18px]" /> : <Sun className="size-[18px]" />}
             </button>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="size-10 flex items-center justify-center rounded-lg text-foreground"
               aria-label="Toggle menu"
+              aria-expanded={mobileOpen}
             >
               {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
             </button>
@@ -143,9 +178,9 @@ export default function Header() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-x-0 top-16 z-overlay bg-background/98 backdrop-blur-xl border-b border-border lg:hidden"
+            className="fixed inset-x-0 top-16 z-[60] bg-background/95 backdrop-blur-xl border-b border-border lg:hidden"
           >
-            <nav className="container-wide py-6 flex flex-col gap-1">
+            <nav className="container-wide py-6 flex flex-col gap-1" aria-label="Mobile">
               {NAV_LINKS.map((link) => {
                 const isActive = location.pathname === link.path;
                 return (
@@ -153,9 +188,7 @@ export default function Header() {
                     key={link.path}
                     to={link.path}
                     className={`px-4 py-3 rounded-lg text-base font-medium transition-colors ${
-                      isActive
-                        ? 'bg-brand-orange/10 text-brand-orange'
-                        : 'text-foreground/70 hover:bg-accent'
+                      isActive ? 'bg-brand-orange/10 text-brand-orange' : 'text-foreground/70 hover:bg-accent'
                     }`}
                   >
                     {link.label}
@@ -163,15 +196,31 @@ export default function Header() {
                 );
               })}
               <div className="mt-4 pt-4 border-t border-border flex flex-col gap-3">
-                <a
-                  href={`tel:${SITE_CONFIG.emergencyPhone}`}
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-brand-orange font-medium"
-                >
+                {user ? (
+                  <>
+                    <Link to="/dashboard" className="px-4 py-2 text-sm font-medium text-foreground flex items-center gap-2">
+                      <LayoutDashboard className="size-4" /> My Dashboard
+                    </Link>
+                    {isAdmin && (
+                      <Link to="/admin" className="px-4 py-2 text-sm font-medium text-brand-orange flex items-center gap-2">
+                        <ShieldCheck className="size-4" /> Admin Panel
+                      </Link>
+                    )}
+                    <button onClick={handleLogout} className="px-4 py-2 text-sm font-medium text-muted-foreground flex items-center gap-2 text-left">
+                      <LogOut className="size-4" /> Log Out ({user.email})
+                    </button>
+                  </>
+                ) : (
+                  <Link to="/login" className="px-4 py-2 text-sm font-medium text-foreground">
+                    Log In / Create Account
+                  </Link>
+                )}
+                <a href={`tel:${SITE_CONFIG.emergencyPhone}`} className="flex items-center gap-2 px-4 py-2 text-sm text-brand-orange font-medium">
                   <Zap className="size-4" />
                   Emergency: {SITE_CONFIG.emergencyPhone}
                 </a>
                 <Button asChild className="bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold">
-                  <Link to="/contact">
+                  <Link to="/booking">
                     <Phone className="size-4 mr-2" />
                     Book Appointment
                   </Link>

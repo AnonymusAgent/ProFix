@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
@@ -12,14 +12,23 @@ import EmergencyBanner from '@/components/features/EmergencyBanner';
 import FAQAccordion from '@/components/features/FAQAccordion';
 import BookingForm from '@/components/features/BookingForm';
 import { SERVICES } from '@/constants/mockData';
+import { fetchServices } from '@/lib/api';
+import type { Service } from '@/types';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'all' | 'plumbing' | 'electrical'>('all');
+  const [services, setServices] = useState<Service[]>(SERVICES);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchServices().then((data) => { if (!cancelled && data.length) setServices(data); });
+    return () => { cancelled = true; };
+  }, []);
   const { ref: servicesRef, isVisible: servicesVisible } = useScrollAnimation();
   const { ref: bookingRef, isVisible: bookingVisible } = useScrollAnimation();
 
-  const filteredServices = SERVICES.filter(
+  const filteredServices = services.filter(
     (s) => activeTab === 'all' || s.category === activeTab
   ).slice(0, 6);
 

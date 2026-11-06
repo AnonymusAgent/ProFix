@@ -25,7 +25,9 @@ export const SITE_CONFIG = {
 export const NAV_LINKS = [
   { label: 'Home', path: '/' },
   { label: 'Services', path: '/services' },
+  { label: 'Pricing', path: '/pricing' },
   { label: 'About', path: '/about' },
-  { label: 'Contact', path: '/contact' },
+  { label: 'Reviews', path: '/testimonials' },
   { label: 'FAQ', path: '/faq' },
+  { label: 'Contact', path: '/contact' },
 ] as const;

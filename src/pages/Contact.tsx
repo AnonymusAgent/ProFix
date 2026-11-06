@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { createContactMessage, ApiError } from '@/lib/api';
 import { SITE_CONFIG } from '@/constants/config';
 import BookingForm from '@/components/features/BookingForm';
 import type { ContactFormData } from '@/types';
@@ -51,19 +52,38 @@ export default function Contact() {
     name: '', email: '', phone: '', subject: '', message: '',
   });
   const [contactSubmitted, setContactSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
   const { toast } = useToast();
 
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!contactForm.name || !contactForm.email || !contactForm.message) {
+    if (!contactForm.name.trim() || !contactForm.email.trim() || !contactForm.message.trim()) {
       toast({ variant: 'destructive', title: 'Missing fields', description: 'Please fill in all required fields.' });
       return;
     }
-    const msgs = JSON.parse(localStorage.getItem('profix-messages') || '[]');
-    msgs.push({ ...contactForm, id: Date.now(), createdAt: new Date().toISOString() });
-    localStorage.setItem('profix-messages', JSON.stringify(msgs));
-    setContactSubmitted(true);
-    toast({ title: 'Message Sent!', description: 'We\'ll get back to you within 2 hours.' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactForm.email)) {
+      toast({ variant: 'destructive', title: 'Invalid email', description: 'Please enter a valid email address.' });
+      return;
+    }
+    setSending(true);
+    try {
+      const { offline } = await createContactMessage(contactForm);
+      setContactSubmitted(true);
+      toast({
+        title: 'Message Sent!',
+        description: offline
+          ? 'Saved on this device — our server was unreachable. We will still see it once you reconnect, or call us anytime.'
+          : "We'll get back to you within 2 hours.",
+      });
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'Could not send message',
+        description: err instanceof ApiError ? err.message : 'Please try again or call us.',
+      });
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -213,9 +233,9 @@ export default function Contact() {
                       required
                     />
                   </div>
-                  <Button type="submit" size="lg" className="w-full bg-brand-orange hover:bg-brand-orange-dark text-white font-display font-semibold">
+                  <Button type="submit" size="lg" disabled={sending} className="w-full bg-brand-orange hover:bg-brand-orange-dark text-white font-display font-semibold">
                     <Send className="size-4 mr-2" />
-                    Send Message
+                    {sending ? 'Sending…' : 'Send Message'}
                   </Button>
                 </form>
               )}
