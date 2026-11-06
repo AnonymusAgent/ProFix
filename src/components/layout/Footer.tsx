@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Phone, Mail, MapPin, Droplets, Zap, Facebook, Instagram, Twitter, Linkedin, Youtube, ArrowUpRight } from 'lucide-react';
+import { Phone, Mail, MapPin, Facebook, Instagram, Twitter, Linkedin, Youtube, ArrowUpRight } from 'lucide-react';
 import { SITE_CONFIG, NAV_LINKS } from '@/constants/config';
+import Logo from '@/components/brand/Logo';
 import { SERVICE_AREAS } from '@/constants/mockData';
 
 export default function Footer() {
@@ -43,14 +44,8 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8">
           {/* Brand */}
           <div className="lg:col-span-4">
-            <Link to="/" className="flex items-center gap-2.5 mb-5">
-              <div className="relative flex items-center justify-center size-10 rounded-lg bg-gradient-to-br from-brand-orange to-brand-orange-dark">
-                <Droplets className="size-5 text-white" />
-                <Zap className="absolute -right-1 -top-1 size-3.5 text-brand-orange bg-white rounded-full p-0.5" />
-              </div>
-              <span className="text-xl font-display font-bold text-white">
-                Pro<span className="text-brand-orange">Fix</span>
-              </span>
+            <Link to="/" aria-label="ProFix Services — home" className="inline-block mb-5">
+              <Logo light />
             </Link>
             <p className="text-white/60 text-sm leading-relaxed mb-6 max-w-sm">
               {SITE_CONFIG.description} Trusted by thousands of homeowners and businesses for reliable, expert solutions.
@@ -133,9 +128,11 @@ export default function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-white/10">
         <div className="container-wide py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-white/40">
+          <p className="text-xs text-white/50">
             © {currentYear} ProFix Services. All rights reserved. {SITE_CONFIG.license}
-            <span className="block sm:inline sm:ml-2 mt-1 sm:mt-0">Built with Web Loom.</span>
+            <span className="block sm:inline sm:ml-2 mt-1 sm:mt-0">
+              A project of <span className="text-white/80 font-medium">Web Loom LLC</span> — © {currentYear} Web Loom LLC.
+            </span>
           </p>
           <div className="flex items-center gap-6">
             <Link to="/privacy" className="text-xs text-white/40 hover:text-white/70 transition-colors">Privacy Policy</Link>

@@ -3,6 +3,7 @@
   "rewrites": [
     { "source": "/(.*)", "destination": "/api/index.ts" }
   ],
+  "outputDirectory": "public",
   "functions": {
     "api/index.ts": { "maxDuration": 30 }
   }

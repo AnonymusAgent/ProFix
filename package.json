@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
+    "@neondatabase/auth": "^0.6.0-beta",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
@@ -84,5 +85,8 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1"
-  }
+  },
+  "author": "Web Loom LLC",
+  "description": "ProFix Services \u2014 professional plumbing & electrical services. A Web Loom LLC project.",
+  "homepage": "https://profix-web-lovat.vercel.app"
 }

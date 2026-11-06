@@ -17,7 +17,7 @@ real **PostgreSQL** database (Neon in production).
 
 **Admin**
 - Control panel (`/admin`): live stats, booking management (status workflow), contact inbox, user role management
-- Seeded admin account (see Demo accounts below)
+- Admin console at the unlinked `/loginadmin` page (API JWT — see below)
 
 **Backend (`server/`)**
 - Express + TypeScript REST API with JWT auth (bcrypt password hashing)
@@ -81,7 +81,7 @@ link, copy all, paste, Run):
 
 1. [`server/db/schema.sql`](https://raw.githubusercontent.com/AnonymusAgent/ProFix/main/server/db/schema.sql) — creates all tables
 2. [`server/db/seed.sql`](https://raw.githubusercontent.com/AnonymusAgent/ProFix/main/server/db/seed.sql) — 14 services, 14 FAQs, 4 pricing plans, 8 testimonials
-3. [`server/db/admin-user.sql`](https://raw.githubusercontent.com/AnonymusAgent/ProFix/main/server/db/admin-user.sql) — creates the admin login (`admin@profixservices.com` / `Admin@12345`)
+3. [`server/db/admin-user.sql`](https://raw.githubusercontent.com/AnonymusAgent/ProFix/main/server/db/admin-user.sql) — creates the admin account the operator signs in with at `/loginadmin`
 
 All three are idempotent, so re-running them is safe. Verify with:
 
@@ -97,14 +97,20 @@ SELECT (SELECT COUNT(*) FROM services) AS services,       -- expect 14
 > The `NEON_AUTH_BASE_URL` from Neon Auth is not required; it can be
 > integrated later without changing this schema.
 
-## Demo accounts (after seeding)
+## Accounts & sign-in
 
-| Role     | Email                    | Password     |
-|----------|--------------------------|--------------|
-| Admin    | admin@profixservices.com | Admin@12345  |
-| Customer | *(register your own at /register)* | — |
+ProFix uses two separate sign-in systems:
 
-Change `ADMIN_PASSWORD` / `JWT_SECRET` in `server/.env` before going live.
+- **Customers — Neon Auth.** Sign-up/login on `/register` and `/login` run in
+  the browser against the Neon Auth base URL (`VITE_NEON_AUTH_URL` on the
+  `profix-web` Vercel project). Sessions live in Neon Auth cookies; no
+  ProFix API token is issued for customers.
+- **Admin — ProFix API JWT.** The admin console sign-in lives at the
+  unlinked `/loginadmin` page (it is not referenced from the header,
+  footer, or customer login). It posts to the API, which verifies the
+  account against the `users` table and signs a JWT with the server-side
+  `JWT_SECRET`. Admin credentials are provisioned by the operator with
+  `server/db/admin-user.sql` and are never published in the UI or docs.
 
 ## API reference (base: `/api`)
 
@@ -160,7 +166,7 @@ Express, node-postgres (`pg`), Zod, bcryptjs, JWT · PostgreSQL (Neon)
 
 ## License
 
-Open source. **Web Loom copyright attribution must be included in the footer of
+© Web Loom LLC. ProFix is a project of Web Loom LLC. **Web Loom copyright attribution must be included in the footer of
 every page** (already present in `src/components/layout/Footer.tsx`).
 
 ## Deployment (Vercel)

@@ -17,6 +17,7 @@ const FAQ = lazy(() => import('@/pages/FAQ'));
 const Booking = lazy(() => import('@/pages/Booking'));
 const Testimonials = lazy(() => import('@/pages/Testimonials'));
 const Login = lazy(() => import('@/pages/Login'));
+const AdminLogin = lazy(() => import('@/pages/AdminLogin'));
 const Register = lazy(() => import('@/pages/Register'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Admin = lazy(() => import('@/pages/Admin'));
@@ -42,6 +43,8 @@ export default function App() {
         <ScrollToTop />
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
+            {/* Admin sign-in — deliberately unlinked; reachable only by URL */}
+            <Route path="/loginadmin" element={<AdminLogin />} />
             <Route element={<Layout />}>
               <Route path="/" element={<Home />} />
               <Route path="/services" element={<Services />} />
