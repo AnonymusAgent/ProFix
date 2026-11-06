@@ -55,7 +55,7 @@ export default function ServiceCard({ service, index, compact = false }: Service
       className="group relative bg-card rounded-2xl border border-border hover:border-brand-orange/40 overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-brand-orange/5 hover:-translate-y-1"
     >
       {/* Image */}
-      <div className="relative h-48 overflow-hidden">
+      <Link to={`/services/${service.id}`} className="block relative h-48 overflow-hidden" aria-label={service.title}>
         <img
           src={service.image}
           alt={service.title}
@@ -73,7 +73,7 @@ export default function ServiceCard({ service, index, compact = false }: Service
             {service.price}
           </div>
         )}
-      </div>
+      </Link>
 
       {/* Content */}
       <div className="p-6">
@@ -100,13 +100,21 @@ export default function ServiceCard({ service, index, compact = false }: Service
           ))}
         </ul>
 
-        <Link
-          to="/contact"
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-orange hover:text-brand-orange-dark transition-colors group/link"
-        >
-          Request Service
-          <ArrowRight className="size-4 group-hover/link:translate-x-1 transition-transform" />
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link
+            to={`/services/${service.id}`}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-orange hover:text-brand-orange-dark transition-colors group/link"
+          >
+            View Details
+            <ArrowRight className="size-4 group-hover/link:translate-x-1 transition-transform" />
+          </Link>
+          <Link
+            to={`/booking?service=${service.id}`}
+            className="inline-flex items-center px-3 py-1.5 rounded-lg bg-brand-orange/10 text-brand-orange text-sm font-semibold hover:bg-brand-orange hover:text-white transition-colors"
+          >
+            Book Now
+          </Link>
+        </div>
       </div>
     </motion.div>
   );

@@ -1,12 +1,22 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { PRICING_PLANS } from '@/constants/mockData';
+import { fetchPricing } from '@/lib/api';
+import type { PricingPlan } from '@/types';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 export default function PricingCards() {
   const { ref, isVisible } = useScrollAnimation();
+  const [plans, setPlans] = useState<PricingPlan[]>(PRICING_PLANS);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchPricing().then((data) => { if (!cancelled && data.length) setPlans(data); });
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <section ref={ref} className="section-padding">
@@ -26,7 +36,7 @@ export default function PricingCards() {
         </motion.div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {PRICING_PLANS.map((plan, i) => (
+          {plans.map((plan, i) => (
             <motion.div
               key={plan.id}
               initial={{ opacity: 0, y: 30 }}
@@ -76,7 +86,7 @@ export default function PricingCards() {
                   ? 'bg-brand-orange hover:bg-brand-orange-dark text-white'
                   : 'bg-foreground/5 hover:bg-foreground/10 text-foreground'
               }`}>
-                <Link to="/contact">
+                <Link to="/booking">
                   Get Started
                   <ArrowRight className="size-4 ml-2" />
                 </Link>

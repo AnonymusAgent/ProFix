@@ -28,7 +28,7 @@ export const SERVICES: Service[] = [
     icon: 'Waves',
     category: 'plumbing',
     features: ['Hydro-jetting', 'Camera inspection', 'Root removal', 'Preventive maintenance'],
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&h=400&fit=crop',
+    image: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=600&h=400&fit=crop',
     price: 'From $95',
   },
   {
@@ -88,7 +88,7 @@ export const SERVICES: Service[] = [
     icon: 'CircuitBoard',
     category: 'electrical',
     features: ['Panel upgrades', 'Breaker replacement', 'Fault diagnosis', 'Load balancing'],
-    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&h=400&fit=crop',
+    image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&h=400&fit=crop',
     price: 'From $175',
   },
   {
@@ -138,7 +138,7 @@ export const SERVICES: Service[] = [
     icon: 'Zap',
     category: 'electrical',
     features: ['24/7 response', 'Electrical fire safety', 'Power restoration', 'Hazard mitigation'],
-    image: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=600&h=400&fit=crop',
+    image: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=600&h=400&fit=crop',
     price: 'From $150',
   },
 ];
@@ -280,6 +280,16 @@ export const FAQ_DATA: FAQItem[] = [
     question: 'Do you offer smart home installation?',
     answer: 'Yes! Our electrical team specializes in smart home installations including automated lighting, smart thermostats, security systems, voice control integration, and whole-home automation.',
     category: 'Electrical',
+  },
+  {
+    question: 'How much does a plumber visit cost?',
+    answer: 'A diagnostic visit is $89 and is waived when you proceed with the repair. You always receive a written, itemised quote before any work begins — no hidden fees.',
+    category: 'Plumbing',
+  },
+  {
+    question: 'Can you fix a burst pipe the same day?',
+    answer: 'Yes. Burst pipes are treated as emergencies: turn off your main water valve and call (555) 911-3690. Our average emergency arrival time is under 30 minutes in the Metro City area.',
+    category: 'Plumbing',
   },
   {
     question: 'What should I do during a plumbing emergency?',

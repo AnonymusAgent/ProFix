@@ -1,0 +1,16 @@
+# Local PostgreSQL for development (production uses Neon — see README.md)
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: profix-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: profix
+      POSTGRES_PASSWORD: profix
+      POSTGRES_DB: profix
+    ports:
+      - "5432:5432"
+    volumes:
+      - profix-pgdata:/var/lib/postgresql/data
+volumes:
+  profix-pgdata:

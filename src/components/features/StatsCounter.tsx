@@ -1,7 +1,10 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useCounter } from '@/hooks/useCounter';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { STATS } from '@/constants/mockData';
+import { fetchStats } from '@/lib/api';
+import type { Stat } from '@/types';
 
 function StatItem({ value, suffix, label, index }: { value: number; suffix: string; label: string; index: number }) {
   const { ref, isVisible } = useScrollAnimation(0.3);
@@ -26,6 +29,14 @@ function StatItem({ value, suffix, label, index }: { value: number; suffix: stri
 }
 
 export default function StatsCounter() {
+  const [stats, setStats] = useState<Stat[]>(STATS);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchStats().then((data) => { if (!cancelled && data.length) setStats(data); });
+    return () => { cancelled = true; };
+  }, []);
+
   return (
     <section className="relative bg-navy overflow-hidden">
       {/* Geometric background */}
@@ -40,7 +51,7 @@ export default function StatsCounter() {
 
       <div className="container-wide relative z-10 py-16 lg:py-24">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-          {STATS.map((stat, i) => (
+          {stats.map((stat, i) => (
             <StatItem key={stat.label} {...stat} index={i} />
           ))}
         </div>

@@ -28,7 +28,7 @@ export default function Footer() {
               Call Now
             </a>
             <Link
-              to="/contact"
+              to="/booking"
               className="flex items-center gap-2 px-6 py-3 border-2 border-white text-white font-display font-semibold rounded-lg hover:bg-white/10 transition-colors"
             >
               Book Online
@@ -135,10 +135,12 @@ export default function Footer() {
         <div className="container-wide py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-white/40">
             © {currentYear} ProFix Services. All rights reserved. {SITE_CONFIG.license}
+            <span className="block sm:inline sm:ml-2 mt-1 sm:mt-0">Built with Web Loom.</span>
           </p>
           <div className="flex items-center gap-6">
-            <button className="text-xs text-white/40 hover:text-white/70 transition-colors">Privacy Policy</button>
-            <button className="text-xs text-white/40 hover:text-white/70 transition-colors">Terms of Service</button>
+            <Link to="/privacy" className="text-xs text-white/40 hover:text-white/70 transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="text-xs text-white/40 hover:text-white/70 transition-colors">Terms of Service</Link>
+            <Link to="/login" className="text-xs text-white/40 hover:text-white/70 transition-colors">Customer Login</Link>
           </div>
         </div>
       </div>

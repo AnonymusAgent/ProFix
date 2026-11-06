@@ -69,3 +69,63 @@ export interface ContactFormData {
   subject: string;
   message: string;
 }
+
+/* ---------- Backend / API types ---------- */
+
+export interface ApiService extends Service {
+  slug: string;
+  priceCents?: number | null;
+  isActive?: boolean;
+}
+
+export type UserRole = 'customer' | 'admin' | 'technician';
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  role: UserRole;
+  createdAt?: string;
+}
+
+export type BookingStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+
+export interface BookingRecord {
+  id: string;
+  userId?: string | null;
+  serviceSlug?: string | null;
+  name: string;
+  email?: string | null;
+  phone: string;
+  address?: string | null;
+  serviceType: string;
+  date?: string | null;
+  time?: string | null;
+  urgency: string;
+  description?: string | null;
+  status: BookingStatus;
+  assignedTo?: string | null;
+  createdAt: string;
+  /** true when saved locally because the API was unreachable */
+  offline?: boolean;
+}
+
+export interface ContactMessageRecord {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  subject?: string | null;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface AdminStats {
+  totalBookings: number;
+  bookingsByStatus: Record<string, number>;
+  totalUsers: number;
+  unreadMessages: number;
+  activeServices: number;
+}

@@ -1,17 +1,29 @@
 import { motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FAQ_DATA } from '@/constants/mockData';
+import { fetchFaqs } from '@/lib/api';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import type { FAQItem } from '@/types';
 
 interface FAQAccordionProps {
-  items?: typeof FAQ_DATA;
+  items?: FAQItem[];
   showHeader?: boolean;
 }
 
-export default function FAQAccordion({ items = FAQ_DATA.slice(0, 6), showHeader = true }: FAQAccordionProps) {
+export default function FAQAccordion({ items: itemsProp, showHeader = true }: FAQAccordionProps) {
+  const [fetched, setFetched] = useState<FAQItem[]>(FAQ_DATA.slice(0, 6));
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const { ref, isVisible } = useScrollAnimation();
+
+  useEffect(() => {
+    if (itemsProp) return;
+    let cancelled = false;
+    fetchFaqs().then((data) => { if (!cancelled && data.length) setFetched(data.slice(0, 6)); });
+    return () => { cancelled = true; };
+  }, [itemsProp]);
+
+  const items = itemsProp ?? fetched;
 
   return (
     <section ref={ref} className={showHeader ? 'section-padding' : ''}>
