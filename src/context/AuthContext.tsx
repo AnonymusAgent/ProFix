@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { apiLogin, apiMe, tokenStore } from '@/lib/api';
+import { apiLogin, apiMe, apiNeonBridge, tokenStore } from '@/lib/api';
 import { isNeonAuthConfigured, neonAuth } from '@/lib/neon-auth';
 import type { AuthUser } from '@/types';
 
@@ -34,6 +34,19 @@ function neonUserToAuthUser(u: { id: string; name: string; email: string }): Aut
   return { id: u.id, name: u.name, email: u.email, phone: null, role: 'customer' };
 }
 
+/**
+ * Mint the ProFix API token for a Neon-signed-in user. Best-effort: if the
+ * API is unreachable the Neon session still works and the dashboard shows
+ * its offline fallback instead of trapping the user on the login page.
+ */
+async function bridgeNeonSession(u: AuthUser, phone?: string): Promise<void> {
+  try {
+    await apiNeonBridge({ email: u.email, name: u.name, phone });
+  } catch {
+    /* API down — customer pages fall back gracefully */
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,7 +72,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const { data } = await neonAuth.getSession();
           if (!cancelled && data?.user) {
-            setUser(neonUserToAuthUser(data.user));
+            const u = neonUserToAuthUser(data.user);
+            // (Re)bridge on every load: also repairs sessions created
+            // before the bridge existed and expired API tokens.
+            await bridgeNeonSession(u);
+            if (!cancelled) setUser(u);
           }
         } catch {
           /* no customer session — stay signed out */
@@ -126,11 +143,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    if (tokenStore.get()) {
-      tokenStore.clear();
-      setUser(null);
-      return;
-    }
+    // Clear BOTH sessions: the ProFix API token (admin JWT or bridged
+    // customer token) and the Neon Auth cookie session.
+    tokenStore.clear();
     try {
       await neonAuth?.signOut();
     } catch {

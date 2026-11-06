@@ -104,6 +104,19 @@ async function main() {
   check('admin login', adminLogin.status === 200 && adminLogin.body.data.user.role === 'admin', adminLogin.body);
   const adminToken = adminLogin.body.data.token as string;
 
+  // Neon bridge: a Neon-signed-in customer exchanges identity for an API
+  // token that passes requireAuth, and can then read their bookings.
+  const bridge = await call('POST', '/auth/neon', { name: 'E2E Tester', email: 'e2e@example.com' });
+  check('neon bridge returns token', bridge.status === 200 && !!bridge.body.data.token, bridge.body);
+  const bridged = await call('GET', '/bookings/me', undefined, bridge.body.data.token as string);
+  check('bridged token reads bookings', bridged.status === 200 && bridged.body.data.bookings.length === 1, bridged.body);
+
+  const bridgeNew = await call('POST', '/auth/neon', { name: 'Neon Newbie', email: 'neon-new@example.com', phone: '555-0199' });
+  check('neon bridge creates customer', bridgeNew.status === 201 && bridgeNew.body.data.user.role === 'customer', bridgeNew.body);
+
+  const bridgeAdmin = await call('POST', '/auth/neon', { name: 'Boss', email: 'admin@profixservices.com' });
+  check('neon bridge refuses admin email', bridgeAdmin.status === 403, bridgeAdmin.body);
+
   const updated = await call('PATCH', `/bookings/${bookingId}`, { status: 'confirmed' }, adminToken);
   check('admin confirms booking', updated.body.data.booking.status === 'confirmed', updated.body);
 

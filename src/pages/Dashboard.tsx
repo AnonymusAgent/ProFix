@@ -138,7 +138,7 @@ export default function Dashboard() {
                 {apiError && bookings.length === 0 && (
                   <div className="bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 rounded-xl px-4 py-3 text-sm mb-4 flex gap-2">
                     <WifiOff className="size-4 shrink-0 mt-0.5" />
-                    <span>{apiError} — the API may still be waiting for its database connection (Neon). Bookings saved on this device are shown below.</span>
+                    <span>{apiError} — we couldn't reach the booking service just now, so bookings saved on this device are shown below. Refresh in a moment to see live statuses.</span>
                   </div>
                 )}
 

@@ -103,8 +103,15 @@ ProFix uses two separate sign-in systems:
 
 - **Customers — Neon Auth.** Sign-up/login on `/register` and `/login` run in
   the browser against the Neon Auth base URL (`VITE_NEON_AUTH_URL` on the
-  `profix-web` Vercel project). Sessions live in Neon Auth cookies; no
-  ProFix API token is issued for customers.
+  `profix-web` Vercel project). Sessions live in Neon Auth cookies. Right
+  after a Neon session is established (login, register, or restore on page
+  load), the browser bridges it via `POST /api/auth/neon`, which upserts the
+  customer in the `users` table and returns a ProFix API JWT — that token is
+  what authorizes `/bookings/me`, cancellations, and reviews. (Without the
+  bridge, signed-in customers saw "Authentication required. Please log in."
+  from the API.) Bridged accounts get an unusable random password hash, so
+  API password login stays impossible for them, and the bridge never issues
+  a token for an admin-role email.
 - **Admin — ProFix API JWT.** The admin console sign-in lives at the
   unlinked `/loginadmin` page (it is not referenced from the header,
   footer, or customer login). It posts to the API, which verifies the

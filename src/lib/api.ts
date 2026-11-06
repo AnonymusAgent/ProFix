@@ -241,6 +241,19 @@ export async function apiLogin(input: { email: string; password: string }) {
   return data;
 }
 
+/**
+ * Exchange an established Neon Auth identity for a ProFix API token.
+ * Called by AuthContext right after Neon login/register/session restore
+ * so customer endpoints (/bookings/me, cancellations, reviews) accept the
+ * signed-in user instead of returning 401. Stores the token exactly like
+ * apiLogin does. Never returns admin tokens (backend refuses those).
+ */
+export async function apiNeonBridge(input: { email: string; name: string; phone?: string }) {
+  const data = await request<AuthResponse>('/auth/neon', { method: 'POST', body: JSON.stringify(input) });
+  tokenStore.set(data.token);
+  return data;
+}
+
 export async function apiMe(): Promise<AuthUser> {
   const { user } = await request<{ user: AuthUser }>('/auth/me');
   return user;
