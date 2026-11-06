@@ -10,6 +10,15 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { ApiError } from '@/lib/api';
 
+
+function friendlyAuthError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : 'Please try again.';
+  if (/invalid origin/i.test(raw)) {
+    return 'Registration is not enabled for this website address yet. The site owner must add this domain in Neon Console -> Auth -> Domains (trusted domains), then registration will work.';
+  }
+  return raw;
+}
+
 export default function Register() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirm: '' });
   const [submitting, setSubmitting] = useState(false);
@@ -39,7 +48,7 @@ export default function Register() {
       toast({
         variant: 'destructive',
         title: 'Registration failed',
-        description: err instanceof Error ? err.message : 'Please try again.',
+        description: friendlyAuthError(err),
       });
     } finally {
       setSubmitting(false);

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Phone, Sun, Moon, Zap, LayoutDashboard, LogOut, ShieldCheck } from 'lucide-react';
+import { Menu, X, Phone, Sun, Moon, Zap, LayoutDashboard, LogOut, ShieldCheck, HardHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SITE_CONFIG, NAV_LINKS } from '@/constants/config';
 import Logo from '@/components/brand/Logo';
@@ -127,9 +127,17 @@ export default function Header() {
                 </button>
               </>
             ) : (
-              <Button asChild variant="ghost" size="default" className="font-semibold">
-                <Link to="/login">Log In</Link>
-              </Button>
+              <>
+                <Button asChild variant="ghost" size="default" className="font-semibold">
+                  <Link to="/worker/login">
+                    <HardHat className="size-4 mr-2" />
+                    For Workers
+                  </Link>
+                </Button>
+                <Button asChild variant="ghost" size="default" className="font-semibold">
+                  <Link to="/login">Log In</Link>
+                </Button>
+              </>
             )}
             <Button asChild size="default" className="bg-brand-orange hover:bg-brand-orange-dark text-white font-semibold shadow-lg shadow-brand-orange/25 ml-1">
               <Link to="/booking">
@@ -191,6 +199,9 @@ export default function Header() {
                     <Link to="/dashboard" className="px-4 py-2 text-sm font-medium text-foreground flex items-center gap-2">
                       <LayoutDashboard className="size-4" /> My Dashboard
                     </Link>
+                    <Link to="/worker/dashboard" className="px-4 py-2 text-sm font-medium text-foreground flex items-center gap-2">
+                      <HardHat className="size-4" /> Worker Dashboard
+                    </Link>
                     {isAdmin && (
                       <Link to="/admin" className="px-4 py-2 text-sm font-medium text-brand-orange flex items-center gap-2">
                         <ShieldCheck className="size-4" /> Admin Panel
@@ -201,9 +212,14 @@ export default function Header() {
                     </button>
                   </>
                 ) : (
-                  <Link to="/login" className="px-4 py-2 text-sm font-medium text-foreground">
-                    Log In / Create Account
-                  </Link>
+                  <>
+                    <Link to="/login" className="px-4 py-2 text-sm font-medium text-foreground">
+                      Log In / Create Account
+                    </Link>
+                    <Link to="/worker/login" className="px-4 py-2 text-sm font-medium text-foreground flex items-center gap-2">
+                      <HardHat className="size-4" /> Worker Login / Sign-Up
+                    </Link>
+                  </>
                 )}
                 <a href={`tel:${SITE_CONFIG.emergencyPhone}`} className="flex items-center gap-2 px-4 py-2 text-sm text-brand-orange font-medium">
                   <Zap className="size-4" />

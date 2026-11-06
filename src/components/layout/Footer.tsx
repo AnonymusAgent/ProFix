@@ -138,6 +138,7 @@ export default function Footer() {
             <Link to="/privacy" className="text-xs text-white/40 hover:text-white/70 transition-colors">Privacy Policy</Link>
             <Link to="/terms" className="text-xs text-white/40 hover:text-white/70 transition-colors">Terms of Service</Link>
             <Link to="/login" className="text-xs text-white/40 hover:text-white/70 transition-colors">Customer Login</Link>
+            <Link to="/worker/login" className="text-xs text-white/40 hover:text-white/70 transition-colors">Worker Login</Link>
           </div>
         </div>
       </div>

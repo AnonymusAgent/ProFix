@@ -22,6 +22,7 @@ import catalogRoutes from './routes/catalog.js';
 import testimonialsRoutes from './routes/testimonials.js';
 import contactRoutes from './routes/contact.js';
 import adminRoutes from './routes/admin.js';
+import workerRoutes from './routes/workers.js';
 
 const app = express();
 
@@ -60,6 +61,7 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/bookings', bookingsRoutes);
 app.use('/api/testimonials', testimonialsRoutes);
+app.use('/api/workers', workerRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', catalogRoutes); // /faqs /pricing /stats
 app.use('/api', contactRoutes); // /contact /newsletter
