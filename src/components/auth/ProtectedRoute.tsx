@@ -13,7 +13,10 @@ export default function ProtectedRoute({ children, adminOnly = false }: { childr
       </div>
     );
   }
+  // Admin routes must bounce to the ADMIN login (/loginadmin), never the
+  // customer login: admin credentials entered into the Neon customer form
+  // can only ever fail with "Invalid email or password".
+  if (adminOnly && !isAdmin) return <Navigate to="/loginadmin" replace />;
   if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
-  if (adminOnly && !isAdmin) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }
