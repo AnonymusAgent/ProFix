@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { apiSaveWorkerProfile, apiWorkerMe } from '@/lib/api';
+import { friendlyAuthError } from '@/lib/auth-errors';
 import Logo from '@/components/brand/Logo';
 import TradePicker, { type Trade } from '@/components/worker/TradePicker';
 
@@ -45,7 +46,7 @@ export default function WorkerLogin() {
       toast({
         variant: 'destructive',
         title: 'Worker login failed',
-        description: err instanceof Error ? err.message : 'Please try again.',
+        description: friendlyAuthError(err),
       });
     } finally {
       setSubmitting(false);
