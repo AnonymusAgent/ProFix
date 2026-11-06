@@ -10,6 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setPool, query, closePool } from './pool.js';
 import { seed } from './seed.js';
+import { config } from '../config.js';
 
 async function main() {
   const db = newDb();
@@ -46,9 +47,9 @@ async function main() {
 
   // Auth flow: seeded admin can log in
   const admin = await query<{ password_hash: string; role: string }>(
-    'SELECT * FROM users WHERE email = $1', ['admin@profixservices.com']);
+    'SELECT * FROM users WHERE email = $1', [config.admin.email]);
   if (!admin.rows[0] || admin.rows[0].role !== 'admin') throw new Error('admin missing');
-  const valid = await bcrypt.compare(process.env.ADMIN_PASSWORD || 'Admin@12345', admin.rows[0].password_hash);
+  const valid = await bcrypt.compare(config.admin.password || 'Admin@12345', admin.rows[0].password_hash);
   if (!valid) throw new Error('admin password hash mismatch');
   console.log('[smoke] admin login hash verified');
 

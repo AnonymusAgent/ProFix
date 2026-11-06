@@ -37,7 +37,58 @@ export const tokenStore = {
   clear: () => localStorage.removeItem(TOKEN_KEY),
 };
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+/** Role claim of the stored ProFix token, if any (payload is only read, never trusted for UI gating). */
+function storedTokenRole(): string | null {
+  const token = tokenStore.get();
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))) as { role?: string };
+    return payload.role ?? null;
+  } catch {
+    return null;
+  }
+}
+
+let rebridgeInFlight: Promise<boolean> | null = null;
+
+/**
+ * Re-run the Neon -> API bridge (POST /auth/neon) from the live Neon
+ * session and store the fresh token. Used to self-heal a 401 that raced
+ * the initial bridge (e.g. Neon compute waking on the first request of
+ * the day): previously the dashboard showed "Authentication required"
+ * until a manual refresh re-ran the bridge. Admin tokens are never
+ * re-bridged — an admin 401 must not silently downgrade the session.
+ */
+async function rebridgeFromNeonSession(): Promise<boolean> {
+  if (storedTokenRole() === 'admin') return false;
+  if (!rebridgeInFlight) {
+    rebridgeInFlight = (async () => {
+      try {
+        const { isNeonAuthConfigured, neonAuth } = await import('./neon-auth');
+        if (!isNeonAuthConfigured || !neonAuth) return false;
+        const { data } = await neonAuth.getSession();
+        if (!data?.user) return false;
+        const res = await fetch(`${BASE}/auth/neon`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: data.user.email, name: data.user.name }),
+        });
+        if (!res.ok) return false;
+        const body = (await res.json().catch(() => ({}))) as { data?: { token?: string } };
+        if (!body.data?.token) return false;
+        tokenStore.set(body.data.token);
+        return true;
+      } catch {
+        return false;
+      } finally {
+        rebridgeInFlight = null;
+      }
+    })();
+  }
+  return rebridgeInFlight;
+}
+
+async function request<T>(path: string, options: RequestInit = {}, isRetry = false): Promise<T> {
   const token = tokenStore.get();
   let res: Response;
   try {
@@ -50,7 +101,22 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       },
     });
   } catch {
+    // Cold-start protection for idempotent reads: Neon/Vercel waking up
+    // can drop the very first request; one delayed retry avoids showing
+    // an error banner that a refresh would have "fixed".
+    const method = (options.method || 'GET').toUpperCase();
+    if (!isRetry && method === 'GET') {
+      await new Promise((r) => setTimeout(r, 700));
+      return request<T>(path, options, true);
+    }
     throw new ApiError(0, 'NETWORK_ERROR', 'Cannot reach the server. Check your connection.');
+  }
+  if (res.status === 401 && !isRetry && !path.startsWith('/auth/')) {
+    // Token missing/expired or the login bridge has not settled yet:
+    // re-bridge from the Neon session and retry once, invisibly.
+    if (await rebridgeFromNeonSession()) {
+      return request<T>(path, options, true);
+    }
   }
   const body = (await res.json().catch(() => ({}))) as {
     data?: T;

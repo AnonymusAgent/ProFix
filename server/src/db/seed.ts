@@ -13,7 +13,10 @@ export async function seed() {
   await query(sql);
   console.log('[db] catalog seed applied:', seedPath);
 
-  const hash = await bcrypt.hash(config.admin.password, 12);
+  // Local/dev seed only: production owner login uses ADMIN_PASSWORD env
+  // directly (see routes/auth.ts), so a blank env value gets a throwaway
+  // dev password here just to keep the seeded row well-formed.
+  const hash = await bcrypt.hash(config.admin.password || 'Admin@12345', 12);
   await query(
     `INSERT INTO users (name, email, password_hash, role)
      VALUES ($1, $2, $3, 'admin')
