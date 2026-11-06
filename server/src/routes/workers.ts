@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { query } from '../db/pool.js';
 import { ApiError, ok } from '../utils/http.js';
-import { requireAdmin } from '../middleware/auth.js';
+import { requireAdmin, requireAuth } from '../middleware/auth.js';
 
 /**
  * Worker (plumber / electrician) profiles + activity.
@@ -69,6 +69,48 @@ router.post('/profile', async (req, res, next) => {
   }
 });
 
+const becomeSchema = z.object({
+  trade: z.enum(['plumber', 'electrician']),
+  phone: z.string().trim().max(40).optional().or(z.literal('')),
+});
+
+/**
+ * POST /api/workers/become — a signed-in customer switches to a worker
+ * account (same email, converted — never a duplicate registration).
+ * Identity comes from the API token, so nobody can convert someone
+ * else's account. After switching, the worker dashboard takes over.
+ */
+router.post('/become', requireAuth, async (req, res, next) => {
+  try {
+    const body = becomeSchema.parse(req.body);
+    const email = req.user!.email.toLowerCase();
+    const { rows: userRows } = await query<{ name: string; phone: string | null; role: string }>(
+      'SELECT name, phone, role FROM users WHERE lower(email) = $1', [email],
+    );
+    if (!userRows[0]) throw new ApiError(404, 'NOT_FOUND', 'Account not found.');
+    if (userRows[0].role === 'admin') {
+      throw new ApiError(422, 'INVALID_STATE', 'Admin accounts cannot become workers.');
+    }
+    const { rows } = await query<WorkerRow>(
+      `INSERT INTO worker_profiles (neon_user_id, email, name, phone, trade)
+       VALUES (NULL, $1, $2, $3, $4)
+       ON CONFLICT (email) DO UPDATE SET
+         phone = COALESCE(EXCLUDED.phone, worker_profiles.phone),
+         trade = EXCLUDED.trade,
+         updated_at = now()
+       RETURNING *`,
+      [email, userRows[0].name, body.phone || userRows[0].phone, body.trade],
+    );
+    await query(`UPDATE users SET role = 'technician' WHERE lower(email) = $1`, [email]);
+    return ok(res, { worker: mapWorker(rows[0]) }, 201);
+  } catch (err) {
+    if (workerTableMissing(err)) {
+      return next(new ApiError(503, 'WORKER_TABLE_MISSING', 'Worker tables are not installed yet. Run server/db/worker-schema.sql in the Neon SQL Editor.'));
+    }
+    return next(err);
+  }
+});
+
 /** GET /api/workers — admin only: profiles for the Assign-to-worker picker */
 router.get('/', requireAdmin, async (_req, res, next) => {
   try {
@@ -95,6 +137,15 @@ router.get('/me', async (req, res, next) => {
     );
     if (!workers.length) throw new ApiError(404, 'WORKER_NOT_FOUND', 'No worker profile for this account yet.');
     const worker = workers[0];
+    // Account status from the users table (suspension flag shown on the
+    // worker profile; column arrives with accounts-schema.sql).
+    let accountStatus: 'active' | 'suspended' = 'active';
+    try {
+      const { rows: st } = await query<{ status?: string }>(
+        'SELECT status FROM users WHERE lower(email) = $1', [email],
+      );
+      if (st[0]?.status === 'suspended') accountStatus = 'suspended';
+    } catch { /* pre-migration: treat as active */ }
     const tradeCategory = worker.trade === 'plumber' ? 'plumbing' : 'electrical';
 
     // Assigned jobs for this worker
@@ -150,7 +201,7 @@ router.get('/me', async (req, res, next) => {
     ).length;
 
     return ok(res, {
-      worker: mapWorker(worker),
+      worker: { ...mapWorker(worker), accountStatus },
       stats: {
         payoutRate: WORKER_PAYOUT_RATE,
         earnedThisMonthCents: earnedThisMonth,

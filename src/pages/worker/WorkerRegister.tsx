@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
-import { apiSaveWorkerProfile } from '@/lib/api';
+import { apiSaveWorkerProfile, fetchEmailStatus } from '@/lib/api';
 import { friendlyAuthError } from '@/lib/auth-errors';
 import Logo from '@/components/brand/Logo';
 import TradePicker, { type Trade } from '@/components/worker/TradePicker';
@@ -44,6 +44,28 @@ export default function WorkerRegister() {
       toast({ variant: 'destructive', title: 'Passwords do not match', description: 'Please re-enter your password.' });
       return;
     }
+    // Customer and worker accounts stay separate: one email, one kind of
+    // account. Existing customers switch from their dashboard instead of
+    // registering a second account with the same email.
+    try {
+      const st = await fetchEmailStatus(form.email.trim());
+      if (st.suspended) {
+        toast({ variant: 'destructive', title: 'Account suspended', description: 'This account has been suspended. Please contact ProFix support.' });
+        return;
+      }
+      if (st.asWorker) {
+        toast({ variant: 'destructive', title: 'Already a worker', description: 'This email already has a worker account. Please use Worker Login instead.' });
+        return;
+      }
+      if (st.asCustomer) {
+        toast({
+          variant: 'destructive',
+          title: 'Email used by a customer account',
+          description: 'Customer and worker accounts use separate emails. Either use a different email for work, or log in as a customer and choose “Become a worker” in your profile settings to switch this account.',
+        });
+        return;
+      }
+    } catch { /* status service unavailable — Neon still enforces its own uniqueness */ }
     setSubmitting(true);
     try {
       const user = await register({

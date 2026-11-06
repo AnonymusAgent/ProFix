@@ -124,6 +124,35 @@ ProFix uses two separate sign-in systems:
   old `server/db/admin-user.sql` seed is legacy. Credentials are never
   published in the UI or docs.
 
+### Admin console, cookies & account safety
+
+- The admin console (`/admin`, via `/loginadmin`) has its **own shell** —
+  no customer header/footer or booking CTAs — with **Overview** (booking,
+  revenue, signup, status and top-service analytics; traffic-level web
+  analytics run via Vercel Analytics), **Bookings**, **Messages**, and
+  **Users & Workers** sections.
+- **Cookies:** essential cookies (sign-in/session and analytics) are
+  always on and cannot be blocked; visitors can only switch **marketing**
+  cookies off, from the consent banner or the footer's *Cookie Settings*.
+- **One email, one account:** sign-up pages check
+  `GET /api/auth/email-status` first, so the same email cannot register
+  twice, and customer/worker emails stay separate. A customer who wants
+  to work with ProFix switches instead — *Become a worker* in the
+  dashboard profile settings (`POST /api/workers/become`) converts the
+  same account; nothing is duplicated.
+- **Fraud reports & suspension:** customers can report the worker on a
+  booking (*Report fraud*); admins see report counts per account in
+  *Users & Workers* (accounts with **more than 3 reports** are
+  highlighted) and can **suspend/reinstate** or **delete** accounts.
+  Suspended accounts get no API token, are signed out, and show a
+  *Suspended · Fraud* flag on customer and worker profiles.
+- **Legacy admin removal:** run `server/db/accounts-schema.sql` once in
+  the Neon SQL Editor — it adds the account-status columns + fraud
+  reports table and deletes the obsolete seeded
+  `admin@profixservices.com` admin. (The same columns/table are already
+  in `schema.sql` for fresh installs, and the admin Users tab can delete
+  accounts point-and-click.)
+
 ## API reference (base: `/api`)
 
 | Method | Endpoint | Auth | Description |
@@ -145,6 +174,11 @@ ProFix uses two separate sign-in systems:
 | GET | `/contact`, PATCH `/contact/:id/read` | admin | Inbox |
 | GET | `/admin/stats` | admin | Dashboard counters |
 | GET | `/admin/users`, PATCH `/admin/users/:id/role` | admin | User management |
+| GET | `/admin/analytics` | admin | Revenue, completion, signups, top services |
+| PATCH | `/admin/users/:id/status`, DELETE `/admin/users/:id` | admin | Suspend/reinstate or delete accounts |
+| GET | `/auth/email-status` | — | Pre-registration duplicate/kind check |
+| POST | `/reports` | user | File a fraud report against an account |
+| POST | `/workers/become` | user | Customer switches to a worker account |
 | POST/PATCH/DELETE | `/services`, `/services/:id` | admin | Service CRUD (delete = deactivate) |
 
 ## Scripts

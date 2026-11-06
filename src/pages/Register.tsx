@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
-import { ApiError } from '@/lib/api';
+import { ApiError, fetchEmailStatus } from '@/lib/api';
 import { friendlyAuthError } from '@/lib/auth-errors';
 
 export default function Register() {
@@ -31,6 +31,23 @@ export default function Register() {
       toast({ variant: 'destructive', title: 'Passwords do not match', description: 'Please re-enter your password.' });
       return;
     }
+    // One email = one account. Stop duplicates (and customer/worker
+    // mix-ups) before Neon Auth is even called.
+    try {
+      const st = await fetchEmailStatus(form.email.trim());
+      if (st.suspended) {
+        toast({ variant: 'destructive', title: 'Account suspended', description: 'This account has been suspended. Please contact ProFix support.' });
+        return;
+      }
+      if (st.asWorker) {
+        toast({ variant: 'destructive', title: 'Email registered as a worker', description: 'This email already has a worker account. Please use Worker Login instead.' });
+        return;
+      }
+      if (st.exists) {
+        toast({ variant: 'destructive', title: 'Account already exists', description: 'An account with this email already exists. Please log in instead.' });
+        return;
+      }
+    } catch { /* status service unavailable — Neon still enforces its own uniqueness */ }
     setSubmitting(true);
     try {
       const user = await register({ name: form.name.trim(), email: form.email.trim(), phone: form.phone.trim() || undefined, password: form.password });

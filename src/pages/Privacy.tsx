@@ -15,7 +15,7 @@ const sections = [
   },
   {
     title: 'Cookies & local storage',
-    body: 'We use local storage in your browser to remember your theme, your login session, and — only if our server is unreachable when you submit a form — a temporary offline copy of your request on your own device.',
+    body: 'Essential cookies are always active: they keep you signed in, protect the site, and include our analytics cookies, which help us understand how the site is used (page visits, popular services). Marketing cookies are optional — you can turn them off at any time via "Cookie Settings" in the footer; no marketing cookies are set while they are off. We also use browser storage to remember your theme, your cookie choice, and — only if our server is unreachable when you submit a form — a temporary offline copy of your request on your own device.',
   },
   {
     title: 'Your rights',

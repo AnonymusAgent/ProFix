@@ -27,8 +27,54 @@ interface UserRow {
 }
 
 function publicUser(u: UserRow) {
-  return { id: u.id, name: u.name, email: u.email, phone: u.phone, role: u.role, createdAt: u.created_at };
+  const r = u as UserRow & { status?: string };
+  return {
+    id: u.id, name: u.name, email: u.email, phone: u.phone, role: u.role,
+    status: r.status === 'suspended' ? 'suspended' : 'active',
+    createdAt: u.created_at,
+  };
 }
+
+const SUSPENDED_ERROR = () =>
+  new ApiError(403, 'ACCOUNT_SUSPENDED', 'This account has been suspended. Please contact ProFix support.');
+
+/**
+ * GET /api/auth/email-status?email= — public pre-registration check.
+ * Customer and worker accounts are kept separate: the sign-up pages use
+ * this to stop duplicate registrations ("already a customer", "already
+ * a worker") before Neon Auth is even called. Returns no account data
+ * beyond existence/kind/status.
+ */
+router.get('/email-status', async (req, res, next) => {
+  try {
+    const email = String(req.query.email || '').trim().toLowerCase();
+    if (!email || !email.includes('@')) throw new ApiError(422, 'VALIDATION_ERROR', 'A valid email query parameter is required.');
+    const { rows: users } = await query<{ role: string; status?: string }>(
+      'SELECT role FROM users WHERE lower(email) = $1', [email],
+    ).catch(() => ({ rows: [] as { role: string; status?: string }[] }));
+    if (users[0]) {
+      // status column arrives with accounts-schema.sql; tolerate its absence
+      const { rows: st } = await query<{ status?: string }>(
+        'SELECT status FROM users WHERE lower(email) = $1', [email],
+      ).catch(() => ({ rows: [] as { status?: string }[] }));
+      users[0].status = st[0]?.status;
+    }
+    let isWorker = false;
+    try {
+      const { rows } = await query('SELECT id FROM worker_profiles WHERE email = $1', [email]);
+      isWorker = rows.length > 0;
+    } catch { /* worker table optional */ }
+    const user = users[0];
+    return ok(res, {
+      email,
+      exists: Boolean(user) || isWorker,
+      asCustomer: Boolean(user) && user?.role !== 'admin',
+      asWorker: isWorker,
+      role: user?.role ?? null,
+      suspended: user?.status === 'suspended',
+    });
+  } catch (e) { next(e); }
+});
 
 router.post('/register', async (req, res, next) => {
   try {
@@ -97,6 +143,7 @@ router.post('/login', async (req, res, next) => {
     const { rows } = await query<UserRow>('SELECT * FROM users WHERE lower(email) = $1', [body.email]);
     const user = rows[0];
     if (!user || user.role === 'admin') throw new ApiError(401, 'INVALID_CREDENTIALS', 'Invalid email or password.');
+    if ((user as UserRow & { status?: string }).status === 'suspended') throw SUSPENDED_ERROR();
     const valid = await bcrypt.compare(body.password, user.password_hash);
     if (!valid) throw new ApiError(401, 'INVALID_CREDENTIALS', 'Invalid email or password.');
     const token = signToken({ id: user.id, email: user.email, role: user.role });
@@ -150,6 +197,9 @@ router.post('/neon', async (req, res, next) => {
       );
       user = rows[0];
     }
+    // Suspended accounts (admin action, usually after fraud reports) get
+    // no API token — the web app turns this into a sign-out + notice.
+    if ((user as UserRow & { status?: string }).status === 'suspended') throw SUSPENDED_ERROR();
     const token = signToken({ id: user.id, email: user.email, role: user.role });
     return ok(res, { token, user: publicUser(user) }, created ? 201 : 200);
   } catch (e) { next(e); }

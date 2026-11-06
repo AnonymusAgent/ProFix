@@ -36,6 +36,12 @@ async function main() {
   await query(
     schema.slice(0, schema.indexOf(marker)).replace(/CREATE EXTENSION[^;]*;/, ''),
   );
+  // Accounts update (status/fraud reports) — applied like the owner would
+  // in the Neon SQL Editor.
+  const accountsSchema = readFileSync(path.resolve(here, '../db/accounts-schema.sql'), 'utf8');
+  await query(accountsSchema);
+  const workerSchema = readFileSync(path.resolve(here, '../db/worker-schema.sql'), 'utf8');
+  await query(workerSchema);
   const { seed } = await import('../src/db/seed.js');
   await seed();
 
@@ -121,6 +127,43 @@ async function main() {
 
   const bridgeAdmin = await call('POST', '/auth/neon', { name: 'Boss', email: 'alimukhtar@profix.com' });
   check('neon bridge refuses admin email', bridgeAdmin.status === 403, bridgeAdmin.body);
+
+  // Accounts: duplicate guard, fraud reports, suspension, deletion,
+  // customer->worker switch, analytics.
+  const emailStatus = await call('GET', '/auth/email-status?email=e2e@example.com');
+  check('email-status sees customer', emailStatus.body.data.exists === true && emailStatus.body.data.asCustomer === true, emailStatus.body);
+
+  const report = await call('POST', '/reports', { reportedEmail: 'neon-new@example.com', reason: 'No-show and demanded cash' }, token);
+  check('fraud report filed', report.status === 201 && report.body.data.reportCount === 1, report.body);
+
+  const adminUsers = await call('GET', '/admin/users', undefined, adminToken);
+  const newbie = (adminUsers.body.data.users as { id: string; email: string; reportCount: number }[]).find((u) => u.email === 'neon-new@example.com');
+  check('admin users show report count', !!newbie && newbie.reportCount === 1, adminUsers.body);
+
+  const suspend = await call('PATCH', `/admin/users/${newbie!.id}/status`, { status: 'suspended', reason: 'Fraud reports' }, adminToken);
+  check('admin suspends account', suspend.status === 200 && suspend.body.data.user.status === 'suspended', suspend.body);
+
+  const bridgeSuspended = await call('POST', '/auth/neon', { name: 'Neon Newbie', email: 'neon-new@example.com' });
+  check('suspended account gets no bridge token', bridgeSuspended.status === 403 && bridgeSuspended.body.error.code === 'ACCOUNT_SUSPENDED', bridgeSuspended.body);
+
+  const reinstate = await call('PATCH', `/admin/users/${newbie!.id}/status`, { status: 'active' }, adminToken);
+  check('admin reinstates account', reinstate.status === 200 && reinstate.body.data.user.status === 'active', reinstate.body);
+
+  const become = await call('POST', '/workers/become', { trade: 'plumber' }, token);
+  check('customer switches to worker', become.status === 201 && become.body.data.worker.trade === 'plumber', become.body);
+
+  const workerMe = await call('GET', '/workers/me?email=e2e@example.com');
+  check('switched worker profile loads', workerMe.status === 200 && workerMe.body.data.worker.accountStatus === 'active', workerMe.body);
+
+  const analytics = await call('GET', '/admin/analytics', undefined, adminToken);
+  check('admin analytics', analytics.status === 200 && analytics.body.data.analytics.monthly.length === 6, analytics.body);
+
+  const tempBridge = await call('POST', '/auth/neon', { name: 'Temp User', email: 'temp-delete@example.com' });
+  const tempId = tempBridge.body.data.user.id as string;
+  const del = await call('DELETE', `/admin/users/${tempId}`, undefined, adminToken);
+  check('admin deletes account', del.status === 200 && del.body.data.deleted === true, del.body);
+  const emailStatusGone = await call('GET', '/auth/email-status?email=temp-delete@example.com');
+  check('deleted account no longer exists', emailStatusGone.body.data.exists === false, emailStatusGone.body);
 
   const updated = await call('PATCH', `/bookings/${bookingId}`, { status: 'confirmed' }, adminToken);
   check('admin confirms booking', updated.body.data.booking.status === 'confirmed', updated.body);
