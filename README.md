@@ -162,3 +162,21 @@ Express, node-postgres (`pg`), Zod, bcryptjs, JWT · PostgreSQL (Neon)
 
 Open source. **Web Loom copyright attribution must be included in the footer of
 every page** (already present in `src/components/layout/Footer.tsx`).
+
+## Deployment (Vercel)
+
+Two git-linked Vercel projects deploy from `main`:
+
+| Project | Root | What it runs |
+|---------|------|--------------|
+| `profix-api` | `server/` | Express API as a serverless function (`server/api/index.ts`, see `server/vercel.json`) |
+| `profix-web` | repo root | Vite frontend (SPA fallback in root `vercel.json`) |
+
+**API project env vars:** `DATABASE_URL` (Neon pooled string), `JWT_SECRET`,
+`CLIENT_URL` (the web project's origin, for CORS).
+**Web project env vars:** `VITE_API_URL` (the API project's URL, e.g.
+`https://profix-api-<team>.vercel.app`) — the frontend calls
+`$VITE_API_URL/...` paths under `/api` routes served by the API project.
+
+Verify a deployment: `GET <api-url>/api/health` → `"db":"connected"`, and
+`<api-url>/api/services` returns the 14 seeded services.

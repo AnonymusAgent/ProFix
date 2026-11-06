@@ -1,8 +1,16 @@
 import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
+import * as helmetModule from 'helmet';
 import morgan from 'morgan';
-import rateLimit from 'express-rate-limit';
+import * as rateLimitModule from 'express-rate-limit';
+import type { RequestHandler } from 'express';
+
+// helmet / express-rate-limit ship CJS + ESM shapes; depending on the
+// bundler's interop the callable may live on .default. Resolve it once
+// here so every compiler (local tsc, Vercel) type-checks and runs.
+type MiddlewareFactory = (options?: Record<string, unknown>) => RequestHandler;
+const helmet = ((helmetModule as { default?: unknown }).default ?? helmetModule) as MiddlewareFactory;
+const rateLimit = ((rateLimitModule as { default?: unknown }).default ?? rateLimitModule) as MiddlewareFactory;
 import { config } from './config.js';
 import { checkDb } from './db/pool.js';
 import { errorHandler, notFoundHandler } from './middleware/error.js';
