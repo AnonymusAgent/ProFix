@@ -13,7 +13,12 @@ import type {
  * to a local queue and are flagged `offline` so the UI can be honest about it.
  */
 
-const BASE = (import.meta.env.VITE_API_URL as string | undefined) || '/api';
+const RAW_API_URL = (import.meta.env.VITE_API_URL as string | undefined) || '/api';
+// Accept either the API origin (https://api.example.com) or the full base
+// (https://api.example.com/api); requests below always append /resource.
+const BASE = RAW_API_URL.replace(/\/$/, '').endsWith('/api')
+  ? RAW_API_URL.replace(/\/$/, '')
+  : `${RAW_API_URL.replace(/\/$/, '')}/api`;
 const TOKEN_KEY = 'profix-token';
 
 export class ApiError extends Error {
