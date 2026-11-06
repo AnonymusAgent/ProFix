@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Phone, Sun, Moon, Zap, Droplets, LayoutDashboard, LogOut, ShieldCheck } from 'lucide-react';
+import { Menu, X, Phone, Sun, Moon, Zap, LayoutDashboard, LogOut, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SITE_CONFIG, NAV_LINKS } from '@/constants/config';
+import Logo from '@/components/brand/Logo';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/context/AuthContext';
 
@@ -64,19 +65,8 @@ export default function Header() {
         }`}
       >
         <div className="container-wide flex items-center justify-between h-16 lg:h-[72px]">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="relative flex items-center justify-center size-10 rounded-lg bg-gradient-to-br from-brand-orange to-brand-orange-dark shadow-lg shadow-brand-orange/25">
-              <Droplets className="size-5 text-white" />
-              <Zap className="absolute -right-1 -top-1 size-3.5 text-brand-orange bg-white rounded-full p-0.5" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-display font-bold text-foreground leading-none">
-                Pro<span className="text-brand-orange">Fix</span>
-              </span>
-              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider leading-none mt-0.5">
-                Services
-              </span>
-            </div>
+          <Link to="/" aria-label="ProFix Services — home" className="group">
+            <Logo />
           </Link>
 
           {/* Desktop nav */}

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { UserPlus, Loader2, Droplets, Zap } from 'lucide-react';
+import { UserPlus, Loader2 } from 'lucide-react';
+import Logo from '@/components/brand/Logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,7 +39,7 @@ export default function Register() {
       toast({
         variant: 'destructive',
         title: 'Registration failed',
-        description: err instanceof ApiError ? err.message : 'Please try again.',
+        description: err instanceof Error ? err.message : 'Please try again.',
       });
     } finally {
       setSubmitting(false);
@@ -53,15 +54,10 @@ export default function Register() {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-md bg-card border border-border rounded-2xl p-8"
         >
-          <div className="flex items-center gap-2.5 mb-6">
-            <div className="relative flex items-center justify-center size-10 rounded-lg bg-gradient-to-br from-brand-orange to-brand-orange-dark">
-              <Droplets className="size-5 text-white" />
-              <Zap className="absolute -right-1 -top-1 size-3.5 text-brand-orange bg-white rounded-full p-0.5" />
-            </div>
-            <div>
-              <h1 className="font-display font-bold text-foreground text-xl leading-none">Create account</h1>
-              <p className="text-xs text-muted-foreground mt-1">Track bookings, leave reviews, book faster</p>
-            </div>
+          <div className="mb-6">
+            <Logo className="mb-5" />
+            <h1 className="font-display font-bold text-foreground text-xl leading-none">Create your account</h1>
+            <p className="text-sm text-muted-foreground mt-2">Book services, track visits and leave reviews</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

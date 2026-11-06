@@ -10,27 +10,27 @@
   --color-brand-orange-dark: 22 82% 44%;
   --color-brand-blue: 210 72% 45%;
   --color-warm-white: 40 20% 98%;
-  --color-slate-bg: 220 14% 96%;
+  --color-slate-bg: 210 40% 96%;
 
   /* shadcn tokens */
-  --background: 40 20% 98%;
-  --foreground: 216 60% 10%;
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
   --card: 0 0% 100%;
-  --card-foreground: 216 60% 10%;
+  --card-foreground: 222 47% 11%;
   --popover: 0 0% 100%;
-  --popover-foreground: 216 60% 10%;
+  --popover-foreground: 222 47% 11%;
   --primary: 22 82% 54%;
   --primary-foreground: 0 0% 100%;
   --secondary: 210 72% 45%;
   --secondary-foreground: 0 0% 100%;
-  --muted: 220 14% 96%;
-  --muted-foreground: 215 16% 47%;
-  --accent: 220 14% 96%;
-  --accent-foreground: 216 60% 10%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 25% 36%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222 47% 11%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  --border: 220 13% 91%;
-  --input: 220 13% 91%;
+  --border: 214 32% 84%;
+  --input: 214 32% 84%;
   --ring: 22 82% 54%;
   --radius: 0.625rem;
 
@@ -70,6 +70,13 @@
 
   body {
     @apply bg-background text-foreground font-body antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: hsl(215 20% 42%);
+    opacity: 1;
   }
 
   h1, h2, h3, h4, h5, h6 {
