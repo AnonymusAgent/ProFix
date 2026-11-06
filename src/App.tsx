@@ -6,6 +6,7 @@ import Layout from '@/components/layout/Layout';
 import ScrollToTop from '@/components/layout/ScrollToTop';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { Toaster } from '@/components/ui/toaster';
+import { Analytics } from '@vercel/analytics/react';
 
 const Home = lazy(() => import('@/pages/Home'));
 const Services = lazy(() => import('@/pages/Services'));
@@ -78,6 +79,7 @@ export default function App() {
           </Routes>
         </Suspense>
         <Toaster />
+        <Analytics />
       </AuthProvider>
     </ThemeProvider>
   );
