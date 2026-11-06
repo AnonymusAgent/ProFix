@@ -59,9 +59,13 @@ app.use('/api', contactRoutes); // /contact /newsletter
 app.use('/api', notFoundHandler);
 app.use(errorHandler);
 
-app.listen(config.port, '0.0.0.0', () => {
-  console.log(`[profix-api] listening on http://0.0.0.0:${config.port} (${config.nodeEnv})`);
-  void checkDb().then((db) => console.log(`[profix-api] database: ${db}`));
-});
+// On Vercel the app is exported as a serverless function (see
+// server/api/index.ts) and must not listen on a port.
+if (!process.env.VERCEL) {
+  app.listen(config.port, '0.0.0.0', () => {
+    console.log(`[profix-api] listening on http://0.0.0.0:${config.port} (${config.nodeEnv})`);
+    void checkDb().then((db) => console.log(`[profix-api] database: ${db}`));
+  });
+}
 
 export default app;
