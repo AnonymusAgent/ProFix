@@ -14,8 +14,9 @@ import Logo from '@/components/brand/Logo';
  *
  * This page is intentionally not linked from the header, footer, or the
  * customer login page — it is only reachable by typing /loginadmin.
- * Admins authenticate against the ProFix API, which signs a JWT with the
- * server-side JWT_SECRET. Customer accounts (Neon Auth) cannot sign in
+ * Admins authenticate against the ProFix API with the owner email and
+ * the ADMIN_PASSWORD environment variable (checked server-side); the API
+ * then signs a session JWT. Customer accounts (Neon Auth) cannot sign in
  * here, and this form cannot sign customers in.
  */
 export default function AdminLogin() {

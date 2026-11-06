@@ -81,7 +81,7 @@ link, copy all, paste, Run):
 
 1. [`server/db/schema.sql`](https://raw.githubusercontent.com/AnonymusAgent/ProFix/main/server/db/schema.sql) — creates all tables
 2. [`server/db/seed.sql`](https://raw.githubusercontent.com/AnonymusAgent/ProFix/main/server/db/seed.sql) — 14 services, 14 FAQs, 4 pricing plans, 8 testimonials
-3. [`server/db/admin-user.sql`](https://raw.githubusercontent.com/AnonymusAgent/ProFix/main/server/db/admin-user.sql) — creates the admin account the operator signs in with at `/loginadmin`
+3. `server/db/admin-user.sql` — legacy only; the `/loginadmin` owner account is now created automatically on first login (owner email + `ADMIN_PASSWORD` backend env var), so this file no longer needs to be run
 
 All three are idempotent, so re-running them is safe. Verify with:
 
@@ -114,10 +114,15 @@ ProFix uses two separate sign-in systems:
   a token for an admin-role email.
 - **Admin — ProFix API JWT.** The admin console sign-in lives at the
   unlinked `/loginadmin` page (it is not referenced from the header,
-  footer, or customer login). It posts to the API, which verifies the
-  account against the `users` table and signs a JWT with the server-side
-  `JWT_SECRET`. Admin credentials are provisioned by the operator with
-  `server/db/admin-user.sql` and are never published in the UI or docs.
+  footer, or customer login). It posts to the API, which checks the owner
+  email (`ADMIN_EMAIL`, default `alimukhtar@profix.com`) against the
+  `ADMIN_PASSWORD` environment variable set on the backend (Vercel ->
+  profix-backend -> Environment Variables — never committed to the repo),
+  creates the admin row on first login, and signs a session JWT.
+  `JWT_SECRET` only signs those tokens; it is not a login password and
+  must stay set. Admin-role database passwords no longer sign in, so the
+  old `server/db/admin-user.sql` seed is legacy. Credentials are never
+  published in the UI or docs.
 
 ## API reference (base: `/api`)
 

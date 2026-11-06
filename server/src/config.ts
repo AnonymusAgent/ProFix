@@ -21,8 +21,14 @@ export const config = {
     .filter(Boolean),
   admin: {
     name: process.env.ADMIN_NAME || 'ProFix Admin',
-    email: (process.env.ADMIN_EMAIL || 'admin@profixservices.com').toLowerCase(),
-    password: process.env.ADMIN_PASSWORD || 'Admin@12345',
+    // Owner admin login: this email + the password from the ADMIN_PASSWORD
+    // environment variable (Vercel -> profix-backend -> Environment
+    // Variables). The password is NEVER hardcoded in the repo; when
+    // ADMIN_PASSWORD is unset, owner-email password login is disabled.
+    // JWT_SECRET is unrelated to this password — it only signs session
+    // tokens after any successful login and must always stay set.
+    email: (process.env.ADMIN_EMAIL || 'alimukhtar@profix.com').trim().toLowerCase(),
+    password: (process.env.ADMIN_PASSWORD || '').trim(),
   },
 } as const;
 

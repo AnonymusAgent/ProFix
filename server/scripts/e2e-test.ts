@@ -9,6 +9,8 @@ import { newDb } from 'pg-mem';
 
 process.env.PORT = '4100';
 process.env.JWT_SECRET = 'e2e-test-secret';
+process.env.ADMIN_EMAIL = 'alimukhtar@profix.com';
+process.env.ADMIN_PASSWORD = 'Admin@12345';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -100,8 +102,11 @@ async function main() {
   const review = await call('POST', '/testimonials', { rating: 5, text: 'Excellent service, highly recommended!', service: 'Leak Detection' }, token);
   check('submit review', review.status === 201, review.body);
 
-  const adminLogin = await call('POST', '/auth/login', { email: 'admin@profixservices.com', password: process.env.ADMIN_PASSWORD || 'Admin@12345' });
+  const adminLogin = await call('POST', '/auth/login', { email: 'alimukhtar@profix.com', password: 'Admin@12345' });
   check('admin login', adminLogin.status === 200 && adminLogin.body.data.user.role === 'admin', adminLogin.body);
+
+  const adminBad = await call('POST', '/auth/login', { email: 'alimukhtar@profix.com', password: 'wrong-password' });
+  check('admin login rejects wrong env password', adminBad.status === 401, adminBad.body);
   const adminToken = adminLogin.body.data.token as string;
 
   // Neon bridge: a Neon-signed-in customer exchanges identity for an API
@@ -114,7 +119,7 @@ async function main() {
   const bridgeNew = await call('POST', '/auth/neon', { name: 'Neon Newbie', email: 'neon-new@example.com', phone: '555-0199' });
   check('neon bridge creates customer', bridgeNew.status === 201 && bridgeNew.body.data.user.role === 'customer', bridgeNew.body);
 
-  const bridgeAdmin = await call('POST', '/auth/neon', { name: 'Boss', email: 'admin@profixservices.com' });
+  const bridgeAdmin = await call('POST', '/auth/neon', { name: 'Boss', email: 'alimukhtar@profix.com' });
   check('neon bridge refuses admin email', bridgeAdmin.status === 403, bridgeAdmin.body);
 
   const updated = await call('PATCH', `/bookings/${bookingId}`, { status: 'confirmed' }, adminToken);

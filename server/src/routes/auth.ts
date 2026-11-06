@@ -1,7 +1,8 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
+import { config } from '../config.js';
 import { query } from '../db/pool.js';
 import { requireAuth, signToken, type AuthUser } from '../middleware/auth.js';
 import { ApiError, ok } from '../utils/http.js';
@@ -46,12 +47,56 @@ router.post('/register', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+/** Constant-time password comparison (digests first, so lengths never leak). */
+function passwordMatches(candidate: string, expected: string): boolean {
+  const a = createHash('sha256').update(candidate).digest();
+  const b = createHash('sha256').update(expected).digest();
+  return timingSafeEqual(a, b);
+}
+
 router.post('/login', async (req, res, next) => {
   try {
     const body = loginSchema.parse(req.body);
+
+    // Owner admin: fixed email (config.admin.email, default
+    // alimukhtar@profix.com) + password from the ADMIN_PASSWORD env var
+    // (Vercel -> profix-backend). No DB seed and no repo-stored password
+    // involved. On success we upsert the admin row so /auth/me and the
+    // admin endpoints have a real user id to work with. JWT_SECRET still
+    // signs the resulting session token — it is a signing key, not a
+    // password, and stays required.
+    if (body.email === config.admin.email) {
+      if (!config.admin.password || !passwordMatches(body.password, config.admin.password)) {
+        throw new ApiError(401, 'INVALID_CREDENTIALS', 'Invalid email or password.');
+      }
+      const existing = await query<UserRow>('SELECT * FROM users WHERE lower(email) = $1', [body.email]);
+      let user = existing.rows[0];
+      if (!user) {
+        const hash = await bcrypt.hash(randomUUID(), 12);
+        const { rows } = await query<UserRow>(
+          `INSERT INTO users (name, email, phone, password_hash, role)
+           VALUES ($1, $2, NULL, $3, 'admin') RETURNING *`,
+          [config.admin.name, body.email, hash],
+        );
+        user = rows[0];
+      } else if (user.role !== 'admin') {
+        const { rows } = await query<UserRow>(
+          `UPDATE users SET role = 'admin' WHERE id = $1 RETURNING *`,
+          [user.id],
+        );
+        user = rows[0];
+      }
+      const token = signToken({ id: user.id, email: user.email, role: user.role });
+      return ok(res, { token, user: publicUser(user) });
+    }
+
+    // Everyone else: DB bcrypt login — but never for admin-role rows.
+    // The owner env login above is now the ONLY way to obtain an admin
+    // token, so old seeded admin passwords (e.g. admin-user.sql) stop
+    // working here instead of lingering as a second admin door.
     const { rows } = await query<UserRow>('SELECT * FROM users WHERE lower(email) = $1', [body.email]);
     const user = rows[0];
-    if (!user) throw new ApiError(401, 'INVALID_CREDENTIALS', 'Invalid email or password.');
+    if (!user || user.role === 'admin') throw new ApiError(401, 'INVALID_CREDENTIALS', 'Invalid email or password.');
     const valid = await bcrypt.compare(body.password, user.password_hash);
     if (!valid) throw new ApiError(401, 'INVALID_CREDENTIALS', 'Invalid email or password.');
     const token = signToken({ id: user.id, email: user.email, role: user.role });
