@@ -18,6 +18,11 @@ export const WORKER_PAYOUT_RATE = 0.7;
 
 const router = Router();
 
+function workerTableMissing(err: unknown): boolean {
+  return (err as { code?: string } | null)?.code === '42P01';
+}
+
+
 const profileSchema = z.object({
   email: z.string().trim().email().max(254),
   name: z.string().trim().min(2).max(120),
@@ -56,6 +61,9 @@ router.post('/profile', async (req, res, next) => {
     );
     return ok(res, { worker: mapWorker(rows[0]) });
   } catch (err) {
+    if (workerTableMissing(err)) {
+      return next(new ApiError(503, 'WORKER_TABLE_MISSING', 'Worker tables are not installed yet. Run server/db/worker-schema.sql in the Neon SQL Editor.'));
+    }
     return next(err);
   }
 });
@@ -145,6 +153,9 @@ router.get('/me', async (req, res, next) => {
       },
     });
   } catch (err) {
+    if (workerTableMissing(err)) {
+      return next(new ApiError(503, 'WORKER_TABLE_MISSING', 'Worker tables are not installed yet. Run server/db/worker-schema.sql in the Neon SQL Editor.'));
+    }
     return next(err);
   }
 });
