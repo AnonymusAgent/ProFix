@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { apiLogin, apiMe, apiNeonBridge, tokenStore } from '@/lib/api';
+import { apiLogin, apiMe, apiNeonBridge, tokenStore, ApiError } from '@/lib/api';
 import { isNeonAuthConfigured, neonAuth } from '@/lib/neon-auth';
 import type { AuthUser } from '@/types';
 
@@ -38,14 +38,20 @@ function neonUserToAuthUser(u: { id: string; name: string; email: string }): Aut
  * Mint the ProFix API token for a Neon-signed-in user. Best-effort: if the
  * API is unreachable the Neon session still works and the dashboard shows
  * its offline fallback instead of trapping the user on the login page.
+ * Returns the API-side user, 'suspended' when an admin has suspended the
+ * account (no token is issued then), or null when the API is unreachable.
  */
-async function bridgeNeonSession(u: AuthUser, phone?: string): Promise<void> {
+async function bridgeNeonSession(u: AuthUser, phone?: string): Promise<AuthUser | 'suspended' | null> {
   try {
-    await apiNeonBridge({ email: u.email, name: u.name, phone });
-  } catch {
-    /* API down — customer pages fall back gracefully */
+    const { user } = await apiNeonBridge({ email: u.email, name: u.name, phone });
+    return user;
+  } catch (err) {
+    if (err instanceof ApiError && err.code === 'ACCOUNT_SUSPENDED') return 'suspended';
+    return null;
   }
 }
+
+const SUSPENDED_MESSAGE = 'This account has been suspended. Please contact ProFix support if you believe this is a mistake.';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -75,8 +81,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const u = neonUserToAuthUser(data.user);
             // (Re)bridge on every load: also repairs sessions created
             // before the bridge existed and expired API tokens.
-            await bridgeNeonSession(u);
-            if (!cancelled) setUser(u);
+            const bridged = await bridgeNeonSession(u);
+            if (bridged === 'suspended') {
+              // Suspended accounts are signed straight back out.
+              tokenStore.clear();
+              try { await neonAuth.signOut(); } catch { /* ignore */ }
+            } else if (!cancelled) {
+              setUser(bridged ?? u);
+            }
           }
         } catch {
           /* no customer session — stay signed out */
@@ -98,8 +110,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data } = await neonAuth.getSession();
     if (!data?.user) throw new Error('Sign-in succeeded but no session was returned. Please try again.');
     const u = neonUserToAuthUser(data.user);
-    setUser(u);
-    return u;
+    const bridged = await bridgeNeonSession(u);
+    if (bridged === 'suspended') {
+      tokenStore.clear();
+      try { await neonAuth.signOut(); } catch { /* ignore */ }
+      throw new Error(SUSPENDED_MESSAGE);
+    }
+    const signedIn = bridged ?? u;
+    setUser(signedIn);
+    return signedIn;
   }, []);
 
   const register = useCallback(
@@ -126,8 +145,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (!data?.user) throw new Error('Account created. Please log in to continue.');
       const u = neonUserToAuthUser(data.user);
-      setUser(u);
-      return u;
+      const bridged = await bridgeNeonSession(u, input.phone);
+      if (bridged === 'suspended') {
+        tokenStore.clear();
+        try { await neonAuth.signOut(); } catch { /* ignore */ }
+        throw new Error(SUSPENDED_MESSAGE);
+      }
+      const signedIn = bridged ?? u;
+      setUser(signedIn);
+      return signedIn;
     },
     [],
   );
@@ -164,10 +190,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(u);
         return;
       }
-      // Customer profile lives in Neon Auth.
+      // Customer display name lives in Neon Auth; name + phone are also
+      // persisted to the ProFix profile (bridged token) so settings stick
+      // across devices and show correctly to admins/workers.
       if (input.name && neonAuth?.updateUser) {
         const { error } = await neonAuth.updateUser({ name: input.name });
         if (error) throw new Error(error.message || 'Could not update your profile.');
+      }
+      try {
+        const { apiUpdateMe } = await import('@/lib/api');
+        const u = await apiUpdateMe(input);
+        setUser({ ...u, role: user.role === 'technician' ? 'technician' : u.role });
+        return;
+      } catch {
+        /* no API token (offline) — keep the local update below */
       }
       setUser({ ...user, name: input.name ?? user.name, phone: input.phone ?? user.phone });
     },

@@ -3,6 +3,7 @@ import { Phone, Mail, MapPin, Facebook, Instagram, Twitter, Linkedin, Youtube, A
 import { SITE_CONFIG, NAV_LINKS } from '@/constants/config';
 import Logo from '@/components/brand/Logo';
 import { SERVICE_AREAS } from '@/constants/mockData';
+import { openCookieSettings } from '@/lib/consent';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -137,6 +138,7 @@ export default function Footer() {
           <div className="flex items-center gap-6">
             <Link to="/privacy" className="text-xs text-white/40 hover:text-white/70 transition-colors">Privacy Policy</Link>
             <Link to="/terms" className="text-xs text-white/40 hover:text-white/70 transition-colors">Terms of Service</Link>
+            <button onClick={openCookieSettings} className="text-xs text-white/40 hover:text-white/70 transition-colors">Cookie Settings</button>
             <Link to="/login" className="text-xs text-white/40 hover:text-white/70 transition-colors">Customer Login</Link>
             <Link to="/worker/login" className="text-xs text-white/40 hover:text-white/70 transition-colors">Worker Login</Link>
           </div>

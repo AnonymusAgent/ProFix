@@ -48,6 +48,12 @@ export function friendlyAuthError(err: unknown, fallback = 'Please try again.'):
       `${origin} — copy it as-is, with NO trailing slash. Then reload and try again.`
     );
   }
+  if (/already exists|user already|email.*already|EMAIL_TAKEN/i.test(raw)) {
+    return 'An account with this email already exists. One email can only have one account — please log in instead. (Workers: use Worker Login; customers who want to work with us can switch from their dashboard.)';
+  }
+  if (/suspended/i.test(raw)) {
+    return 'This account has been suspended. Please contact ProFix support if you believe this is a mistake.';
+  }
   if (isSignUpDisabledError(err)) {
     return (
       `Sign-ups are switched off in Neon Auth. In Neon Console, open the branch that owns ` +

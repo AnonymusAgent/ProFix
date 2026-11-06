@@ -381,9 +381,45 @@ export async function markMessageRead(id: string): Promise<void> {
   await request(`/contact/${id}/read`, { method: 'PATCH' });
 }
 
-export async function fetchAdminUsers(): Promise<AuthUser[]> {
-  const { users } = await request<{ users: AuthUser[] }>('/admin/users');
+export interface AdminUser extends AuthUser {
+  status: 'active' | 'suspended';
+  suspendReason?: string | null;
+  reportCount: number;
+  isWorker: boolean;
+}
+
+export async function fetchAdminUsers(): Promise<AdminUser[]> {
+  const { users } = await request<{ users: AdminUser[] }>('/admin/users');
   return users;
+}
+
+export async function setUserStatus(id: string, status: 'active' | 'suspended', reason?: string): Promise<AdminUser> {
+  const { user } = await request<{ user: AdminUser }>(`/admin/users/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status, reason }),
+  });
+  return user;
+}
+
+export async function deleteAdminUser(id: string): Promise<void> {
+  await request(`/admin/users/${id}`, { method: 'DELETE' });
+}
+
+export interface AdminAnalytics {
+  revenueCents: number;
+  completedJobs: number;
+  completionRate: number;
+  totalCustomers: number;
+  totalWorkers: number;
+  suspendedAccounts: number;
+  fraudReports: number;
+  monthly: { month: string; bookings: number; revenueCents: number; signups: number }[];
+  topServices: { title: string; count: number }[];
+}
+
+export async function fetchAdminAnalytics(): Promise<AdminAnalytics> {
+  const { analytics } = await request<{ analytics: AdminAnalytics }>('/admin/analytics');
+  return analytics;
 }
 
 export async function updateUserRole(id: string, role: AuthUser['role']): Promise<void> {
@@ -403,6 +439,8 @@ export interface WorkerProfile {
   name: string;
   phone?: string | null;
   trade: 'plumber' | 'electrician';
+  /** Present on /workers/me: admin-set account standing. */
+  accountStatus?: 'active' | 'suspended';
   createdAt?: string;
 }
 
@@ -441,4 +479,35 @@ export async function apiSaveWorkerProfile(input: {
 
 export async function apiWorkerMe(email: string): Promise<WorkerStats> {
   return request<WorkerStats>(`/workers/me?email=${encodeURIComponent(email)}`);
+}
+
+/** Customer -> worker switch (same account, converted; no duplicate sign-up). */
+export async function apiBecomeWorker(input: { trade: 'plumber' | 'electrician'; phone?: string }): Promise<WorkerProfile> {
+  const { worker } = await request<{ worker: WorkerProfile }>('/workers/become', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return worker;
+}
+
+/* ---------- accounts: duplicate guard + fraud reports ---------- */
+
+export interface EmailStatus {
+  email: string;
+  exists: boolean;
+  asCustomer: boolean;
+  asWorker: boolean;
+  role: string | null;
+  suspended: boolean;
+}
+
+export async function fetchEmailStatus(email: string): Promise<EmailStatus> {
+  return request<EmailStatus>(`/auth/email-status?email=${encodeURIComponent(email)}`);
+}
+
+export async function submitFraudReport(reportedEmail: string, reason?: string): Promise<{ reportCount: number }> {
+  return request<{ reportCount: number }>('/reports', {
+    method: 'POST',
+    body: JSON.stringify({ reportedEmail, reason }),
+  });
 }

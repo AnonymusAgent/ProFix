@@ -3,10 +3,15 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   CalendarClock, CheckCircle2, ClipboardList, Droplets, Loader2,
-  TrendingUp, Wallet, Zap,
+  Save, ShieldAlert, TrendingUp, Wallet, Zap,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
-import { apiWorkerMe, type WorkerStats } from '@/lib/api';
+import { apiWorkerMe, apiSaveWorkerProfile, ApiError, type WorkerStats } from '@/lib/api';
+import TradePicker, { type Trade } from '@/components/worker/TradePicker';
 
 const money = (cents: number) =>
   (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: cents % 100 ? 2 : 0 });
@@ -23,9 +28,41 @@ const monthLabel = (key: string) => {
  */
 export default function WorkerDashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [data, setData] = useState<WorkerStats | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState({ name: '', phone: '' });
+  const [trade, setTrade] = useState<Trade>('plumber');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (data) {
+      setForm({ name: data.worker.name, phone: data.worker.phone || '' });
+      setTrade(data.worker.trade);
+    }
+  }, [data]);
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!data) return;
+    setSaving(true);
+    try {
+      await apiSaveWorkerProfile({
+        email: data.worker.email,
+        name: form.name.trim(),
+        phone: form.phone.trim() || undefined,
+        trade,
+        neonUserId: data.worker.neonUserId || undefined,
+      });
+      setData(await apiWorkerMe(data.worker.email));
+      toast({ title: 'Worker profile updated' });
+    } catch (err) {
+      toast({ variant: 'destructive', title: 'Could not save settings', description: err instanceof ApiError ? err.message : undefined });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (!user?.email) return;
@@ -113,6 +150,19 @@ export default function WorkerDashboard() {
             </p>
           </div>
 
+          {worker.accountStatus === 'suspended' && (
+            <div className="bg-red-500/10 border border-red-500/40 text-red-700 dark:text-red-400 rounded-2xl px-5 py-4 mb-8 flex gap-3">
+              <ShieldAlert className="size-5 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-display font-bold">Account suspended — flagged for fraud</p>
+                <p className="text-sm mt-0.5">
+                  This worker profile has been suspended by the ProFix admin team. You cannot receive new
+                  jobs while suspended. Contact ProFix support if you believe this is a mistake.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Earnings cards */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {cards.map(({ icon: Icon, label, value }) => (
@@ -125,6 +175,36 @@ export default function WorkerDashboard() {
               </div>
             ))}
           </div>
+
+          {/* Profile settings */}
+          <form onSubmit={handleSaveSettings} className="bg-card border border-border rounded-2xl p-6 mb-6">
+            <h2 className="font-display font-semibold text-foreground mb-1">Profile settings</h2>
+            <p className="text-sm text-muted-foreground mb-5">
+              Account status: {worker.accountStatus === 'suspended' ? 'Suspended (fraud flag)' : 'Active'} · Trade can be changed if you retrain.
+            </p>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="w-email">Email (sign-in ID — cannot be changed)</Label>
+                <Input id="w-email" value={worker.email} disabled readOnly />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="w-phone">Phone</Label>
+                <Input id="w-phone" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} placeholder="(555) 000-1234" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="w-name">Full name</Label>
+                <Input id="w-name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Trade</Label>
+                <TradePicker value={trade} onChange={setTrade} />
+              </div>
+            </div>
+            <Button type="submit" disabled={saving} className="mt-5 bg-brand-orange hover:bg-brand-orange-dark text-white font-display font-semibold">
+              {saving ? <Loader2 className="size-4 mr-2 animate-spin" /> : <Save className="size-4 mr-2" />}
+              Save Settings
+            </Button>
+          </form>
 
           <div className="grid lg:grid-cols-5 gap-6">
             {/* Monthly activity */}

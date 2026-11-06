@@ -5,6 +5,8 @@ import { AuthProvider } from '@/context/AuthContext';
 import Layout from '@/components/layout/Layout';
 import ScrollToTop from '@/components/layout/ScrollToTop';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import CookieConsent from '@/components/consent/CookieConsent';
+import { Analytics } from '@vercel/analytics/react';
 import { Toaster } from '@/components/ui/toaster';
 
 const Home = lazy(() => import('@/pages/Home'));
@@ -48,6 +50,16 @@ export default function App() {
           <Routes>
             {/* Admin sign-in — deliberately unlinked; reachable only by URL */}
             <Route path="/loginadmin" element={<AdminLogin />} />
+            {/* Admin console gets its OWN shell (no customer header/footer
+                or booking CTAs) — it must never feel like the storefront. */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute adminOnly>
+                  <Admin />
+                </ProtectedRoute>
+              }
+            />
             <Route element={<Layout />}>
               <Route path="/" element={<Home />} />
               <Route path="/services" element={<Services />} />
@@ -78,14 +90,6 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute adminOnly>
-                    <Admin />
-                  </ProtectedRoute>
-                }
-              />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               {/* Catch-all — previously unknown URLs rendered a blank page */}
@@ -94,6 +98,10 @@ export default function App() {
           </Routes>
         </Suspense>
         <Toaster />
+        <CookieConsent />
+        {/* Web analytics (Vercel) — classed as an essential cookie
+            category in our consent model, so it is always on. */}
+        <Analytics />
       </AuthProvider>
     </ThemeProvider>
   );

@@ -86,6 +86,8 @@ export interface AuthUser {
   email: string;
   phone?: string | null;
   role: UserRole;
+  /** Account standing set by admins (suspension after fraud reports). */
+  status?: 'active' | 'suspended';
   createdAt?: string;
 }
 

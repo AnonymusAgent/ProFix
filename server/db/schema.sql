@@ -162,3 +162,17 @@ CREATE TABLE IF NOT EXISTS worker_profiles (
 CREATE INDEX IF NOT EXISTS idx_worker_profiles_trade ON worker_profiles (trade);
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS worker_email TEXT;
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payout_cents INTEGER;
+
+-- Account status / fraud reporting (see accounts-schema.sql)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS suspend_reason TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_at TIMESTAMPTZ;
+CREATE TABLE IF NOT EXISTS fraud_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  reporter_email TEXT NOT NULL,
+  reported_email TEXT NOT NULL,
+  reason TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (reporter_email, reported_email)
+);
+CREATE INDEX IF NOT EXISTS idx_fraud_reports_reported ON fraud_reports (reported_email);
